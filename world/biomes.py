@@ -1,5 +1,5 @@
 import random
-
+import config
 
 class BiomeType:
 
@@ -138,29 +138,39 @@ class Biome:
         self.type = biome_type
         self.tiles_list = ()
 
+        self.generator_tiles_pos_list = ()
 
-def get_random_biome(weights_on: bool = True) -> BiomeType:
+    def add(self, tile):
+        self.tiles_list += tile
+
+    def add_generator(self, tile_pos: tuple):
+        self.generator_tiles_pos_list += (tile_pos,)
+
+
+def get_random_biome(weights_on: bool = True) -> Biome:
     if weights_on:
-        return random.choices(
+        biome_type = random.choices(
             population=TYPES,
             weights=[TYPES[i].spawning_chance for i in range(len(TYPES))],
             k=1
         )[0]
+
     else:
-        return random.choice(TYPES)[0]
+        biome_type = random.choice(TYPES)[0]
+
+    return Biome(biome_type)
 
 
-def spawn_biome(grid: list, biome: BiomeType, x: int, y: int) -> list:
+def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
     """
     Fait apparaitre le biome en fonction de son pattern de génération avec pour centre du pattern les coordonnées x, y.
-    Renvoie la grille modifiée.
+    Modifie directement la grille.
     """
-    grid_copy = [grid[i].copy() for i in range(len(grid))]
 
     width = len(grid)
     height = len(grid[0])
 
-    pattern = biome.spawning_pattern
+    pattern = biome.type.spawning_pattern
     pattern_midpoint = (len(pattern) // 2, len(pattern[0]) // 2)
     for irow in range(len(pattern)):
         for icolumn in range(len(pattern[0])):
@@ -171,9 +181,116 @@ def spawn_biome(grid: list, biome: BiomeType, x: int, y: int) -> list:
 
             if 0 <= grid_x < width and 0 <= grid_y < height:
                 if tile_percent > 0:
-                    grid_copy[grid_y][grid_x] = (biome, tile_percent)
+                    grid[grid_y][grid_x] = (biome, tile_percent)
+                    biome.add_generator((grid_y, grid_x))
 
-    return grid_copy
+
+def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> list:
+    """
+    Essaye de propager le 'biome' à la case 'grid[row_i][column_i]' avec une certaine probabilité 'chance' de réussir.
+    Renvoie la grille après modification.
+    """
+
+    tile_biome = grid[row_i][column_i][0]
+    tile_spreading_value = grid[row_i][column_i][1]
+
+    if tile_biome is None:
+        r_value = random.randint(1, 100)
+        if r_value < chance:  # Spread réussi
+            spreading_value = random.randint(85, 100) * chance / 100
+            grid[row_i][column_i] = (biome, spreading_value)
+            biome.add_generator((row_i, column_i))
+
+    elif tile_biome == biome and tile_spreading_value < 100:
+        tile_spreading_value += round(chance * 10 / 100)
+
+        if tile_spreading_value > 100:
+            tile_spreading_value = 100
+
+        grid[row_i][column_i] = (
+            tile_biome,
+            tile_spreading_value
+        )
+
+
+def init() -> tuple:
+    """
+    Génére aléatoirement des biomes sur la carte.
+    Renvoie tous les objets Biome ainsi générés
+    """
+    all_biomes = ()
+    grid = [[(None, 100) for _ in range(config.MAP_SIZE[0])] for _ in range(config.MAP_SIZE[1])]
+
+    # Spawn des biomes
+    for _ in range(config.NB_BIOMES):
+        spawning_biome = get_random_biome()
+
+        empty_tiles_pos = _get_empty_tiles_pos(grid)
+
+        weights = [grid[row_i][column_i][1] for column_i, row_i in empty_tiles_pos]
+        y, x = random.choices(empty_tiles_pos, weights)[0]
+
+        spawn(grid, spawning_biome, x, y)
+        all_biomes += (spawning_biome,)
+
+    # Propagation des biomes
+    stop = False
+    while not stop:
+
+        grid_copy = [row.copy() for row in grid]
+
+        for biome in all_biomes:
+            for row_i, column_i in biome.generator_tiles_pos_list:
+                spreading_value = grid[row_i][column_i][1]
+
+                # Haut
+                if row_i - 1 >= 0:
+                    spread(grid_copy, row_i - 1, column_i, biome, spreading_value)
+
+                # Bas
+                if row_i + 1 < len(grid):
+                    spread(grid_copy, row_i + 1, column_i, biome, spreading_value)
+
+                # Gauche
+                if column_i - 1 >= 0:
+                    spread(grid_copy, row_i, column_i - 1, biome, spreading_value)
+
+                # Droite
+                if column_i + 1 < len(grid[0]):
+                    spread(grid_copy, row_i, column_i + 1, biome, spreading_value)
+
+        grid = grid_copy
+
+        # Vérification que les listes des biomes sont correctes
+        tiles_counter = 0
+        for biome in all_biomes:
+            new_tuple = ()
+
+            for i in range(len(biome.generator_tiles_pos_list)):
+                y = biome.generator_tiles_pos_list[i][0]
+                x = biome.generator_tiles_pos_list[i][1]
+
+                if grid[y][x][0] == biome:
+                    new_tuple += ((y, x),)
+                    tiles_counter += 1
+
+            biome.generator_tiles_pos_list = new_tuple
+
+        if tiles_counter >= len(grid) * len(grid[0]):
+            stop = True
+
+    return all_biomes
+
+
+def _get_empty_tiles_pos(grid: list) -> tuple:
+    empty_tiles_pos_list = []
+
+    for row_i in range(len(grid)):
+        for column_i in range(len(grid[0])):
+            if grid[row_i][column_i][0] is None:
+                empty_tiles_pos_list.append((row_i, column_i))
+
+    return empty_tiles_pos_list
 
 
 TYPES = (Forest(), Volcano(), Desert(), Pond(), Field(), Mountains())

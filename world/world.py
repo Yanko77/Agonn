@@ -21,9 +21,8 @@ class Map:
     def __init__(self):
         self.size = MAP_SIZE
 
+        self.biomes = biomes.init()  # Liste des objets Biomes de la carte.
         self.grid = self.init_grid()
-
-        self.biomes = []  # Liste des objets Biomes de la carte.
 
     @property
     def width(self):
@@ -40,6 +39,7 @@ class Map:
         """
         Initialise la grille de la carte.
         """
+
         grid = [
             [
                 Tile(x=column_i,
@@ -53,94 +53,11 @@ class Map:
             for row_i in range(self.height)
         ]
 
+        for biome in self.biomes:
+            for tile_pos in biome.generator_tiles_pos_list:
+                grid[tile_pos[0]][tile_pos[1]].biome = biome
+
         return grid
-
-    def init_biomes(self):
-        """
-        Méthode qui génére aléatoirement des biomes sur la carte.
-        """
-        # Liste temporaire : De meme forme que self.grid mais chaque élément est un tuple (Biome, %tage)
-        grid = [[(None, 0) for _ in range(MAP_SIZE[0])] for _ in range(MAP_SIZE[1])]
-
-        for i in range(NB_BIOMES):
-            # Choose BiomeType
-            biome = biomes.get_random_biome()
-
-            x = random.randint(0, MAP_SIZE[0] - 1)
-            y = random.randint(0, MAP_SIZE[1] - 1)
-
-            grid = biomes.spawn_biome(grid, biome, x, y)
-
-        stop = False
-        while not stop:
-            grid_copy = [row.copy() for row in grid]
-
-            stop = True
-            for row_i in range(MAP_SIZE[1]):
-                for column_i in range(MAP_SIZE[0]):
-
-                    biome_type = grid[row_i][column_i][0]
-                    capture_percent = grid[row_i][column_i][1]
-
-                    if biome_type is not None:
-                        # Haut
-                        if row_i - 1 >= 0:
-                            self.spread_biome(grid_copy, row_i - 1, column_i, biome_type, capture_percent)
-
-                        # Bas
-                        if row_i + 1 < MAP_SIZE[1]:
-                            self.spread_biome(grid_copy, row_i + 1, column_i, biome_type, capture_percent)
-
-                        # Gauche
-                        if column_i - 1 >= 0:
-                            self.spread_biome(grid_copy, row_i, column_i - 1, biome_type, capture_percent)
-
-                        # Droite
-                        if column_i + 1 < MAP_SIZE[0]:
-                            self.spread_biome(grid_copy, row_i, column_i + 1, biome_type, capture_percent)
-
-                        '''# Haut-Gauche
-                        if row_i - 1 >= 0 and column_i - 1 >= 0:
-                            self.spread_biome(grid_copy, row_i - 1, column_i - 1, biome_type, capture_percent/(2**(1/2)))
-
-                        # Haut-Droite
-                        if row_i - 1 >= 0 and column_i + 1 < MAP_SIZE[0]:
-                            self.spread_biome(grid_copy, row_i - 1, column_i + 1, biome_type, capture_percent/(2**(1/2)))
-
-                        # Bas-Gauche
-                        if row_i + 1 < MAP_SIZE[1] and column_i - 1 >= 0:
-                            self.spread_biome(grid_copy, row_i + 1, column_i - 1, biome_type, capture_percent/(2**(1/2)))
-
-                        # Bas-Droite
-                        if row_i + 1 < MAP_SIZE[1] and column_i + 1 < MAP_SIZE[0]:
-                            self.spread_biome(grid_copy, row_i + 1, column_i + 1, biome_type, capture_percent/(2**(1/2)))'''
-
-                    else:
-                        stop = False
-
-            grid = grid_copy
-
-        for i_row in range(MAP_SIZE[1]):
-            for i_column in range(MAP_SIZE[0]):
-                self.grid[i_row][i_column].biome = grid[i_row][i_column][0]
-
-    def spread_biome(self, grid: list, row_i: int, column_i: int, biome_type, chance: int):
-        """
-        Propage le biome à la case grid[row_i][column_i] avec une certaine probabilité.
-        """
-        tile = grid[row_i][column_i]
-
-        if tile[0] is None:
-            r_value = random.randint(1, 100)
-            if r_value < chance:  # Spread réussi
-                capture_value = random.randint(85, 100) * chance / 100
-                grid[row_i][column_i] = (biome_type, capture_value)
-
-        elif tile[0] == biome_type:
-            grid[row_i][column_i] = (tile[0], tile[1] + round(chance * 10 / 100))
-
-            if grid[row_i][column_i][1] > 100:
-                grid[row_i][column_i] = (tile[0], 100)
 
 
 @dataclass
@@ -203,9 +120,8 @@ class RoadIntersection:
 
 if __name__ == '__main__':
 
-    m = Map()
     t0 = time.perf_counter()
-    m.init_biomes()
+    m = Map()
     t1 = time.perf_counter()
 
     print(t1 - t0)
@@ -218,7 +134,7 @@ if __name__ == '__main__':
             for column_i in range(MAP_SIZE[0]):
                 tile = m.get_tile(row_i, column_i)
                 pygame.draw.rect(screen,
-                                 tile.biome.color,
+                                 tile.biome.type.color,
                                  pygame.Rect(4 * column_i, 4 * row_i, 4, 4))
 
         pygame.display.flip()
