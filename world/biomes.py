@@ -1,6 +1,7 @@
 import random
 import config
 
+
 class BiomeType:
 
     def __init__(self,
@@ -18,6 +19,8 @@ class BiomeType:
                                  (0, 0,  0,  0, 0),
                                  (0, 0,  0,  0, 0))
         self.spawning_spreading_chance = 100
+        self.area_size = 5  # Rayon de la zone autour du point central du biome dans laquelle aucun autre biome
+                            # ne peut spawn.
 
         self.color = color
 
@@ -40,6 +43,7 @@ class Forest(BiomeType):
              (80,  100, 100, 100, 80),
              (100, 80,  70,  80,  100))
         )
+        self.area_size = 8
 
 
 class Volcano(BiomeType):
@@ -57,6 +61,7 @@ class Volcano(BiomeType):
              (0, 50,  100, 50,  0),
              (0,  0,   0,   0,  0))
         )
+        self.area_size = 4
 
 
 class Desert(BiomeType):
@@ -74,6 +79,7 @@ class Desert(BiomeType):
              (60, 100, 100, 100, 60),
              (100, 60, 50, 60, 100))
         )
+        self.area_size = 4
 
 
 class Pond(BiomeType):
@@ -91,6 +97,7 @@ class Pond(BiomeType):
              (0,  100, 100, 100, 0),
              (40,  0,   0,   0,  40))
         )
+        self.area_size = 3
 
 
 class Field(BiomeType):
@@ -108,7 +115,7 @@ class Field(BiomeType):
              (100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100))
         )
-
+        self.area_size = 9
 
 class Mountains(BiomeType):
 
@@ -125,6 +132,7 @@ class Mountains(BiomeType):
              (0,    0,   0,   0,   0),
              (0,    0,   0,   0,   0))
         )
+        self.area_size = 3
 
 
 class Biome:
@@ -167,9 +175,10 @@ def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
     Modifie directement la grille.
     """
 
-    width = len(grid)
-    height = len(grid[0])
+    width = len(grid[0])
+    height = len(grid)
 
+    # Pattern spawning
     pattern = biome.type.spawning_pattern
     pattern_midpoint = (len(pattern) // 2, len(pattern[0]) // 2)
     for irow in range(len(pattern)):
@@ -179,10 +188,24 @@ def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
             grid_x = x - pattern_midpoint[1] + icolumn
             grid_y = y - pattern_midpoint[0] + irow
 
-            if 0 <= grid_x < width and 0 <= grid_y < height:
+            if _is_in_grid(grid, grid_x, grid_y):
                 if tile_percent > 0:
                     grid[grid_y][grid_x] = (biome, tile_percent)
                     biome.add_generator((grid_y, grid_x))
+
+    # Modification des chances d'apparition des autres biomes autour
+    for i_row in range(-1 * biome.type.area_size, biome.type.area_size):
+        for i_column in range(-1 * biome.type.area_size, biome.type.area_size):
+            grid_x = x + i_column
+            grid_y = y + i_row
+
+            if _is_in_grid(grid, grid_x, grid_y):
+                tile = grid[grid_y][grid_x]
+                if tile[0] is None:
+                    new_tile = (tile[0], 0)
+                    grid[grid_y][grid_x] = new_tile
+
+
 
 
 def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> list:
@@ -291,6 +314,9 @@ def _get_empty_tiles_pos(grid: list) -> tuple:
                 empty_tiles_pos_list.append((row_i, column_i))
 
     return empty_tiles_pos_list
+
+def _is_in_grid(grid, x, y):
+    return 0 <= y < len(grid) and 0 <= x < len(grid[0])
 
 
 TYPES = (Forest(), Volcano(), Desert(), Pond(), Field(), Mountains())
