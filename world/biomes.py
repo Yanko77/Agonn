@@ -43,7 +43,7 @@ class Forest(BiomeType):
              (80,  100, 100, 100, 80),
              (100, 80,  70,  80,  100))
         )
-        self.area_size = 8*0
+        self.area_size = 9
 
 
 class Volcano(BiomeType):
@@ -61,7 +61,7 @@ class Volcano(BiomeType):
              (0, 50,  100, 50,  0),
              (0,  0,   0,   0,  0))
         )
-        self.area_size = 4*0
+        self.area_size = 4
 
 
 class Desert(BiomeType):
@@ -82,13 +82,19 @@ class Desert(BiomeType):
         self.area_size = 4*0
 
 
-class Pond(BiomeType):
+class Pond(BiomeType):  # Marais
 
     def __init__(self):
         super().__init__(name='Pond',
                          crossing_cost=3,
                          spawning_chance=30,
                          color=(12, 72, 14))
+
+        '''((40,  0,   0,   0,  40),
+             (0,  100, 100, 100, 0),
+             (0,  100, 100, 100, 0),
+             (0,  100, 100, 100, 0),
+             (40,  0,   0,   0,  40))'''
 
         self.set_pattern(
             ((40,  0,   0,   0,  40),
@@ -97,7 +103,7 @@ class Pond(BiomeType):
              (0,  100, 100, 100, 0),
              (40,  0,   0,   0,  40))
         )
-        self.area_size = 3*0
+        self.area_size = 8
 
 
 class Field(BiomeType):
@@ -108,14 +114,30 @@ class Field(BiomeType):
                          spawning_chance=100,
                          color=(99, 210, 0))
 
-        self.set_pattern(
+        '''self.set_pattern(
             ((100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100))
+        )'''
+
+        self.set_pattern(
+            (
+                (0,    0,  100, 100, 100, 100, 100,   0,    0),
+                (0,   100, 100, 100, 100, 100, 100,  100,   0),
+                (100, 100, 100, 100, 100, 100, 100,  100, 100),
+                (100, 100, 100, 100, 100, 100, 100,  100, 100),
+                (100, 100, 100, 100, 100, 100, 100,  100, 100),
+                (100, 100, 100, 100, 100, 100, 100,  100, 100),
+                (100, 100, 100, 100, 100, 100, 100,  100, 100),
+                (0,   100, 100, 100, 100, 100, 100,  100,   0),
+                (0,    0,  100, 100, 100, 100, 100,    0,   0),
+
+            )
         )
-        self.area_size = 9*0
+
+        self.area_size = 9
 
 
 class Mountains(BiomeType):
@@ -126,14 +148,55 @@ class Mountains(BiomeType):
                          spawning_chance=40,
                          color=(108, 108, 108))
 
-        self.set_pattern(
+        '''self.set_pattern(
             ((0,    0,   0,   0,   0),
              (0,    0,   0,   0,   0),
              (100, 100, 100, 100, 100),
              (0,    0,   0,   0,   0),
              (0,    0,   0,   0,   0))
+        )'''
+
+        self.set_pattern(
+            (
+                (0,   0,   0,   0,   0,   0,   0,   0,   0),
+                (0,   5,   5,   5,   5,   5,   5,   5,   0),
+                (5,   50,  100, 100, 100, 100, 100, 50, 5),
+                (50,  100, 100, 100, 100, 100, 100, 100, 50),
+                (100, 100, 100, 100, 100, 100, 100, 100, 100),
+                (50,  100, 100, 100, 100, 100, 100, 100, 50),
+                (5,   50,  100, 100, 100, 100, 100, 50, 5),
+                (0,   5,   5,   5,   5,   5,   5,   5,   0),
+                (0,   0,   0,   0,   0,   0,   0,   0,   0),
+            )
         )
-        self.area_size = 3*0
+
+        self.area_size = 9
+
+
+class Water(BiomeType):
+    def __init__(self):
+        super().__init__(name='Water',
+                         crossing_cost=5,
+                         spawning_chance=41,
+                         color=(0, 155, 255))
+        """self.set_pattern(
+            ((100,    0,   0,   0,   0),
+             (0,    100,   66,   33,   0),
+             (0,    66,   100,   66,   0),
+             (0,    33,   66,   100,   0),
+             (0,    0,   0,   0,   100)))"""
+        self.set_pattern(
+            ((100,  1,   0,   0,   0,   0,   0,   0,   0),
+             (1,  100,   1,   0,   0,   0,   0,   0,   0),
+             (0,    1, 100,   1,   0,   0,   0,   0,   0),
+             (0,    0,   1, 100,  66,  33,   0,   0,   0),
+             (0,    0,   0,  66, 100,  66,   0,   0,   0),
+             (0,    0,   0,  33,  66, 100,   1,   0,   0),
+             (0,    0,   0,   0,   0,   1, 100,   1,   0),
+             (0,    0,   0,   0,   0,   0,   1, 100,   1),
+             (0,    0,   0,   0,   0,   0,   0,   1, 100))
+        )
+        self.area_size = 9
 
 
 class Biome:
@@ -319,4 +382,4 @@ def _is_in_grid(grid, x, y):
     return 0 <= y < len(grid) and 0 <= x < len(grid[0])
 
 
-TYPES = (Forest(), Volcano(), Desert(), Pond(), Field(), Mountains())
+TYPES = (Forest(), Volcano(), Desert(), Pond(), Field(), Mountains(), Water())
