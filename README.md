@@ -1,2 +1,2 @@
-# Hanovre
-Jeu d'aventure RolePlay
+# Agonn
+Jeu d'aventure RolePlay se déroulant dans le monde d'Agonn.
