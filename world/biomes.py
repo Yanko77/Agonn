@@ -43,7 +43,7 @@ class Forest(BiomeType):
              (80,  100, 100, 100, 80),
              (100, 80,  70,  80,  100))
         )
-        self.area_size = 8
+        self.area_size = 8*0
 
 
 class Volcano(BiomeType):
@@ -61,7 +61,7 @@ class Volcano(BiomeType):
              (0, 50,  100, 50,  0),
              (0,  0,   0,   0,  0))
         )
-        self.area_size = 4
+        self.area_size = 4*0
 
 
 class Desert(BiomeType):
@@ -79,7 +79,7 @@ class Desert(BiomeType):
              (60, 100, 100, 100, 60),
              (100, 60, 50, 60, 100))
         )
-        self.area_size = 4
+        self.area_size = 4*0
 
 
 class Pond(BiomeType):
@@ -97,7 +97,7 @@ class Pond(BiomeType):
              (0,  100, 100, 100, 0),
              (40,  0,   0,   0,  40))
         )
-        self.area_size = 3
+        self.area_size = 3*0
 
 
 class Field(BiomeType):
@@ -115,7 +115,8 @@ class Field(BiomeType):
              (100, 100, 100, 100, 100),
              (100, 100, 100, 100, 100))
         )
-        self.area_size = 9
+        self.area_size = 9*0
+
 
 class Mountains(BiomeType):
 
@@ -132,7 +133,7 @@ class Mountains(BiomeType):
              (0,    0,   0,   0,   0),
              (0,    0,   0,   0,   0))
         )
-        self.area_size = 3
+        self.area_size = 3*0
 
 
 class Biome:
@@ -206,8 +207,6 @@ def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
                     grid[grid_y][grid_x] = new_tile
 
 
-
-
 def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> list:
     """
     Essaye de propager le 'biome' à la case 'grid[row_i][column_i]' avec une certaine probabilité 'chance' de réussir.
@@ -220,7 +219,7 @@ def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> 
     if tile_biome is None:
         r_value = random.randint(1, 100)
         if r_value < chance:  # Spread réussi
-            spreading_value = random.randint(85, 100) * chance / 100
+            spreading_value = random.randint(80, 100) * chance / 100
             grid[row_i][column_i] = (biome, spreading_value)
             biome.add_generator((row_i, column_i))
 
@@ -250,7 +249,7 @@ def init() -> tuple:
 
         empty_tiles_pos = _get_empty_tiles_pos(grid)
 
-        weights = [grid[row_i][column_i][1] for column_i, row_i in empty_tiles_pos]
+        weights = [grid[row_i][column_i][1] for row_i, column_i in empty_tiles_pos]
         y, x = random.choices(empty_tiles_pos, weights)[0]
 
         spawn(grid, spawning_biome, x, y)
@@ -314,6 +313,7 @@ def _get_empty_tiles_pos(grid: list) -> tuple:
                 empty_tiles_pos_list.append((row_i, column_i))
 
     return empty_tiles_pos_list
+
 
 def _is_in_grid(grid, x, y):
     return 0 <= y < len(grid) and 0 <= x < len(grid[0])

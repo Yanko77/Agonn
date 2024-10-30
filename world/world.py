@@ -6,13 +6,12 @@ Fichier qui gère la carte du monde avec :
 """
 
 import pygame
-import random
 
 import biomes
+from named_places import NamedPlace
 
 from dataclasses import dataclass
-from config import MAP_SIZE, NB_BIOMES
-from colorama import Back
+from config import MAP_SIZE
 import time
 
 
@@ -66,29 +65,6 @@ class Tile:
     y: int
     biome: biomes.Biome  # Objet Biome auquel il appartient
     place: str
-
-
-class NamedPlace:
-
-    def __init__(self,
-                 name: str,
-                 tile: Tile):
-        self.name = name
-
-        self.tile = tile  # Tuile sur laquelle le lieu-dit se situe.
-
-    def add_road(self, road):
-        self.roads.append(road)
-
-
-class Town(NamedPlace):
-
-    def __init__(self,
-                 name: str,
-                 biome: biomes.BiomeType):
-        super().__init__(name, biome)
-
-        self.roads = []  # Liste des routes "officielles" sortantes
 
 
 class Road:

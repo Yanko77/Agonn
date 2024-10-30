@@ -1,0 +1,30 @@
+
+Le perso est fait de parties du corps :
+- Tete (cou inclus)
+- Epaules (G/D)
+- Bras (G/D)
+- Mains (G/D)
+- Torse
+- Jambes (G/D)
+- Pieds (G/D)
+
+On pourra créer des montres avec des parties différentes.
+
+Lors d'un combat, on pourra viser une partie du corps et selon notre stat, le jeu choisi un point aléatoire
+    dans un cercle autour de l'endroit visé.
+
+Le joueur pourra accéder à un panneau avec tous les pv des parties de son corps. La précision de la valeur dépend d'une stat.
+
+
+Idée : Stat de connaissance d'une langue -> On pourrait avoir du mal à comprendre un pnj qui parle une autre langue.
+    -> Caractères erronés.
+Exemple: "Bonjour, je suis le forgeron" -> "B%nj€£r, #e µui£ %e for~e¤on"
+
+Un batiment école/université où on peut prendre des cours de langue / autre discipline pour améliorer les stats de connaissance.
+
+Armures :
+- Armure flat
+- Armure %tage
+- Armure à usage unique par combat
+- les armures ont des stats de défense contre différentes TYPES de dégats : Physiques, magiques, etc
+
