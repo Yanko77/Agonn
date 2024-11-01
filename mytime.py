@@ -80,33 +80,38 @@ class Time:
     Classe qui gère le temps dans le jeu
     """
 
-    TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO secondes en temps réel.
+    TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO nanosecondes en temps réel.
 
     def __init__(self):
-        self.INITIAL_TIME = time.perf_counter_ns()
+        self.clock = Clock(self, time_ratio=self.TIME_RATIO)
 
-    @property
-    def _get_all(self) -> int:
-        """
-        Renvoie le temps écoulé (arrondi à l'entier inférieur) en seconde depuis le début du jeu.
-        """
-        return int((time.perf_counter_ns() - self.INITIAL_TIME) * 10 ** -9)
+        self.value = 0  # Valeur de temps. Nombre de nanosecondes écoulées ingame.
+
+    def update(self):
+        self.clock.tick()
+
+    def get(self):
+        return ns_to_s(self.value)
 
     @property
     def day(self) -> int:
         """
         Renvoie le jour de jeu courant.
         """
-        return self._get_all // (self.TIME_RATIO * 24)
+        return self.get() // (self.TIME_RATIO * 24)
 
     @property
     def hour(self) -> Hour:
         """
-        Renvoie l'heure de jeu courante : (heure, minutes)
+        Renvoie l'heure de jeu courante sous la forme d'un objet Hour.
         """
 
-        hours = (self._get_all - self.day*self.TIME_RATIO*24) // self.TIME_RATIO
-        minutes = (self._get_all - self.day*self.TIME_RATIO*24 - hours*self.TIME_RATIO) * 60 // self.TIME_RATIO
+        current_day_time_value = self.get() - self.day * self.TIME_RATIO * 24
+        hours = current_day_time_value // self.TIME_RATIO
+
+        current_hour_time_value = current_day_time_value - hours * self.TIME_RATIO
+        minutes = current_hour_time_value * 60 // self.TIME_RATIO
+
         return Hour(hours, minutes)
 
     @property
@@ -114,5 +119,61 @@ class Time:
         return Date(self.day, self.hour)
 
 
+class Clock:
+
+    def __init__(self,
+                 time_manager: Time,
+                 time_ratio: int):
+        self.manager = time_manager
+
+        self.time_ratio = time_ratio
+        self.speed = 100
+
+        self.initial_time = time.perf_counter_ns()
+        self._previous_elapsed_time = self.initial_time
+
+    @property
+    def elapsed_time(self) -> int:
+        """ Renvoie le temps réel en nanosecondes écoulé depuis le début du jeu. """
+        return time.perf_counter_ns() - self.initial_time
+
+    def tick(self):
+        """ Met à jour l'horloge """
+
+        # On récupère la valeur de temps écoulé de l'itération de boucle du jeu précédente.
+        elapsed_time = self.elapsed_time
+
+        # On détermine l'incrément attendu et celui réellement appliqué, modifié par la vitesse de jeu.
+        expected_increment = elapsed_time - self._previous_elapsed_time
+        increment = int(expected_increment * self.speed / 100)
+
+        # On incrémente.
+        self.manager.value += increment
+
+        # On stocke la valeur de temps écoulé de l'itération courante, pour l'utiliser lors de l'itération suivante.
+        self._previous_elapsed_time = elapsed_time
+
+
+def ns_to_s(value_in_ns) -> int:
+    """
+    Convertit une valeur initialement en nanosecondes en secondes.
+    Renvoie la partie entière.
+    """
+    return int(value_in_ns * 10 ** -9)
+
+
+def s_to_ns(value_in_s) -> int:
+    """
+    Convertit une valeur initialement en secondes en nanosecondes.
+    Renvoie la partie entière.
+    """
+    return int(value_in_s * 10 ** 9)
+
+
 if __name__ == '__main__':
     t = Time()
+
+    while True:
+        t.update()
+        # print(t.value)
+        print(t.now)
