@@ -39,6 +39,7 @@ class Map:
         Initialise la grille de la carte.
         """
 
+        # Création de la grille
         grid = [
             [
                 Tile(x=column_i,
@@ -52,6 +53,7 @@ class Map:
             for row_i in range(self.height)
         ]
 
+        # Ajout des biomes de chaque tuile
         for biome in self.biomes:
             for tile_pos in biome.generator_tiles_pos_list:
                 grid[tile_pos[0]][tile_pos[1]].biome = biome
