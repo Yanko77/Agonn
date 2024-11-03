@@ -2,12 +2,16 @@ import pygame
 import random
 
 import biomes
+from game import Game
+import mytime
+
+H = mytime.Hour
 
 
 class NamedPlace:
 
     def __init__(self,
-                 game,
+                 game: Game,
                  name: str,
                  tile):
         self.game = game
@@ -27,7 +31,7 @@ class NamedPlace:
 class Town(NamedPlace):
 
     def __init__(self,
-                 game,
+                 game: Game,
                  name: str,
                  tile):
 
@@ -40,7 +44,7 @@ class Town(NamedPlace):
 
 class DistrictType:
     def __init__(self,
-                 game,
+                 game: Game,
                  name: str,
                  places_type_pool: list):
         self.game = game
@@ -53,7 +57,7 @@ class DistrictType:
 
 class DownTown(DistrictType):
 
-    def __init__(self):
+    def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Downtown',
                          places_type_pool=[]  # TODO: Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
@@ -61,7 +65,7 @@ class DownTown(DistrictType):
 
 
 class CommercialDistrict(DistrictType):
-    def __init__(self):
+    def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Commercial district',
                          places_type_pool=[]  # TODO : Boutiques (beaucoup)
@@ -70,7 +74,7 @@ class CommercialDistrict(DistrictType):
 
 class ResidentialDistrict(DistrictType):
 
-    def __init__(self):
+    def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Residential district',
                          places_type_pool=[]  # TODO :  Maisons, Tavernes, Auberges
@@ -79,7 +83,7 @@ class ResidentialDistrict(DistrictType):
 
 class BadDisctrict(DistrictType):
 
-    def __init__(self):
+    def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Bad district',
                          places_type_pool=[]  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
@@ -92,7 +96,7 @@ class District:
     """
 
     def __init__(self,
-                 game,
+                 game: Game,
                  district_type: DistrictType,
                  sites: list):
         self.game = game
@@ -123,7 +127,7 @@ class Site:
     Classe représentant un emplacement de lieu d'un quartier / lieu-dit
     """
     def __init__(self,
-                 game,
+                 game: Game,
                  place_types: tuple,
                  rect: pygame.Rect):
         self.game = game
@@ -149,11 +153,14 @@ class PlaceType:
     """
 
     OPENING_HOURS_RANGES = (
-        ((0, 0), (24, 24)),
+        (
+            (H("00 00"), H("00 00")),
+            (H("24 00"), H("24 00"))
+        ),
     )
 
     def __init__(self,
-                 game,
+                 game: Game,
                  name: str):
         self.game = game
 
@@ -163,29 +170,36 @@ class PlaceType:
         # Image du type d'endroit
         self.images_directory = f'../assets/world/places/{name}/'
 
-        # Horaires d'ouverture. Tuple : ((x1, x2), (x3, x4), ...). Est ouvert entre x1 et x2, entre x3 et x4, etc
+        # Horaires d'ouverture. Tuple : ((h1, h2), (h3, h4), ...). Est ouvert entre h1 et h2, entre h3 et h4, etc
         self.opening_hours = self.init_opening_hours()
 
     @property
     def is_open(self):
-        for open_h, close_h in self.opening_hours:
-            if open_h <= self.game.time.get() <= close_h:
+        for opening_hour, closing_hour in self.opening_hours:
+            if self.game.time.hour.is_between(opening_hour, closing_hour):
                 return True
         return False
 
     def init_opening_hours(self) -> tuple:
-        opening_hours = ()
+
+        opening_hour_tuple = ()
 
         for hours_range in self.OPENING_HOURS_RANGES:
-            open_min, open_max = hours_range[0]
-            close_min, close_max = hours_range[1]
+            opening_hour_min, opening_hour_max = hours_range[0]
+            closing_hour_min, closing_hour_max = hours_range[1]
 
-            opening_hours += ((
-                random.randint(open_min, open_max),
-                random.randint(close_min, close_max)
-            ))
+            opening_hour = mytime.random_hour(opening_hour_min, opening_hour_max)
+            closing_hour = mytime.random_hour(closing_hour_min, closing_hour_max)
 
-        return opening_hours
+            opening_hour = mytime.round_to_quarter(opening_hour)
+            closing_hour = mytime.round_to_quarter(closing_hour)
+
+            opening_hour_tuple += ((
+                opening_hour,
+                closing_hour
+            ),)
+
+        return opening_hour_tuple
 
 
 class ShopType(PlaceType):
@@ -204,7 +218,7 @@ class ShopType(PlaceType):
 class FoodShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((6, 8), (20, 22)),
+        ((H("06 30"), H("08 00")), (H("20 00"), H("22 00"))),
     )
 
     def __init__(self,
@@ -216,7 +230,10 @@ class FoodShop(ShopType):
 class Tavern(PlaceType):
 
     OPENING_HOURS_RANGES = (
-        ((0, 0), (24, 24))
+        (
+            (H("00 00"), H("00 00")),
+            (H("24 00"), H("24 00"))
+        ),
     )
 
     def __init__(self, game):
@@ -227,8 +244,14 @@ class Tavern(PlaceType):
 class Church(PlaceType):
 
     OPENING_HOURS_RANGES = (
-        ((9, 10), (12, 12)),
-        ((14, 15), (17, 19))
+        (
+            (H("09 00"), H("10 00")),
+            (H("12 00"), H("12 00"))
+        ),
+        (
+            (H("14 00"), H("15 00")),
+            (H("17 00"), H("19 00"))
+        )
     )
 
     def __init__(self, game):
@@ -239,8 +262,8 @@ class Church(PlaceType):
 class BlacksmithShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((6, 8), (11, 12)),
-        ((12, 13), (18, 18))
+        ((H("06 00"), H("07 30")), (H("11 00"), H("12 00"))),
+        ((H("12 30"), H("13 30")), (H("18 00"), H("18 00")))
     )
 
     def __init__(self, game):
@@ -251,8 +274,8 @@ class BlacksmithShop(ShopType):
 class TownHall(PlaceType):
 
     OPENING_HOURS_RANGES = (
-        ((10, 10), (12, 12)),
-        ((14, 14), (17, 17))
+        ((H("10 00"), H("10 00")), (H("12 00"), H("12 00"))),
+        ((H("14 00"), H("14 00")), (H("17 00"), H("17 00")))
     )
 
     def __init__(self, game):
@@ -263,7 +286,7 @@ class TownHall(PlaceType):
 class Arena(PlaceType):
 
     OPENING_HOURS_RANGES = (
-        ((17, 18), (22, 24)),
+        ((H("17 00"), H("18 00")), (H("22 00"), H("24 00"))),
     )
 
     def __init__(self,
@@ -275,7 +298,7 @@ class Arena(PlaceType):
 class MarketPlace(PlaceType):
 
     OPENING_HOURS_RANGES = (
-        ((7, 9), (12, 13)),
+        ((H("06 30"), H("07 00")), (H("12 00"), H("13 00"))),
     )
 
     def __init__(self, game):
@@ -286,8 +309,8 @@ class MarketPlace(PlaceType):
 class ArmourerShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((9, 10), (12, 13)),
-        ((13, 14), (15, 17))
+        ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
+        ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
     )
 
     def __init__(self, game):
@@ -298,7 +321,7 @@ class ArmourerShop(ShopType):
 class EnchantingShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((15, 16), (23, 24)),
+        ((H("15 00"), H("16 00")), (H("00 00"), H("02 30"))),
     )
 
     def __init__(self, game):
@@ -309,8 +332,8 @@ class EnchantingShop(ShopType):
 class WeaponShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((9, 10), (12, 13)),
-        ((13, 14), (15, 17))
+        ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
+        ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
     )
 
     def __init__(self, game):
@@ -321,8 +344,8 @@ class WeaponShop(ShopType):
 class EquipementShop(ShopType):
 
     OPENING_HOURS_RANGES = (
-        ((8, 10), (11, 13)),
-        ((12, 14), (17, 19))
+        ((H("08 00"), H("10 00")), (H("11 00"), H("13 00"))),
+        ((H("12 00"), H("14 00")), (H("17 00"), H("19 00"))),
     )
 
     def __init__(self, game):
@@ -331,9 +354,9 @@ class EquipementShop(ShopType):
 
 
 class Inn(PlaceType):
+
     OPENING_HOURS_RANGES = (
-        ((0, 0), (10, 12)),
-        ((17, 18), (24, 24))
+        ((H("17 00"), H("18 00")), (H("10 00"), H("12 00"))),
     )
 
     def __init__(self, game):

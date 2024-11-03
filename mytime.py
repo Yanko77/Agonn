@@ -1,14 +1,23 @@
+import random
 import time
+from functools import singledispatchmethod
 
 
-class Date:
+class Hour:
 
+    @singledispatchmethod
     def __init__(self,
-                 days: int,
-                 hour,
-                 ):
-        self.days = days
-        self.hour = hour
+                 hours: int,
+                 minutes: int):
+        self.hours = hours % 24
+        self.minutes = minutes % 60
+
+    @__init__.register
+    def _from_str(self, hour: str):
+        self.hours, self.minutes = map(int, hour.split(" "))
+
+        self.hours = self.hours % 24
+        self.minutes = self.minutes % 60
 
     def is_between(self, other1, other2):
         if other1 == other2:
@@ -19,42 +28,7 @@ class Date:
             return other1 <= self or self < other2
 
     def __str__(self):
-        return f'{self.days} {self.hour.hours}:{self.hour.minutes}'
-
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Date):
-            raise TypeError('Can only compare two Date objects')
-
-        return self.days == other.days and self.hour == other.hour
-
-    def __lt__(self, other) -> bool:
-        if not isinstance(other, Date):
-            raise TypeError('Can only compare two Date objects')
-
-        return self.days == other.days and self.hour < other.hour or self.days < other.days
-
-    def __le__(self, other) -> bool:
-        if not isinstance(other, Date):
-            raise TypeError('Can only compare two Date objects')
-
-        return self == other or self < other
-
-
-class Hour:
-
-    def __init__(self,
-                 hours: int,
-                 minutes: int):
-        self.hours = hours
-        self.minutes = minutes
-
-    def is_between(self, other1, other2):
-        if other1 == other2:
-            return self == other1
-        elif other1 < other2:
-            return other1 <= self < other2
-        else:
-            return other1 <= self or self < other2
+        return f'{self.hours}:{self.minutes}'
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Hour):
@@ -75,6 +49,45 @@ class Hour:
         return self == other or self < other
 
 
+class Date:
+
+    def __init__(self,
+                 days: int,
+                 hour: Hour,
+                 ):
+        self.days = days
+        self.hour = hour
+
+    def is_between(self, other1, other2):
+        if other1 == other2:
+            return self == other1
+        elif other1 < other2:
+            return other1 <= self < other2
+        else:
+            return other1 <= self or self < other2
+
+    def __str__(self):
+        return f'{self.days} {self.hour}'
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self.days == other.days and self.hour == other.hour
+
+    def __lt__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self.days == other.days and self.hour < other.hour or self.days < other.days
+
+    def __le__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self == other or self < other
+
+
 class Time:
     """
     Classe qui gère le temps dans le jeu
@@ -83,7 +96,7 @@ class Time:
     TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO nanosecondes en temps réel.
 
     def __init__(self):
-        self.clock = Clock(self, time_ratio=self.TIME_RATIO)
+        self.clock = Clock(self)
 
         self.value = 0  # Valeur de temps. Nombre de nanosecondes écoulées ingame.
 
@@ -122,11 +135,9 @@ class Time:
 class Clock:
 
     def __init__(self,
-                 time_manager: Time,
-                 time_ratio: int):
+                 time_manager: Time):
         self.manager = time_manager
 
-        self.time_ratio = time_ratio
         self.speed = 100
 
         self.initial_time = time.perf_counter_ns()
@@ -170,10 +181,61 @@ def s_to_ns(value_in_s) -> int:
     return int(value_in_s * 10 ** 9)
 
 
+def random_hour(hour1: Hour, hour2: Hour) -> Hour:
+    """
+    Renvoie une heure aléatoire entre l'heure1 et l'heure2.
+    """
+    if hour1.hours <= hour2.hours:
+        hours_digit = random.randint(hour1.hours, hour2.hours)
+    else:
+        hours_digit = random.choice((
+            random.randint(hour1.hours, 23),
+            random.randint(0, hour2.hours)
+        ))
+
+    if hours_digit == hour1.hours:
+        minutes_digit = random.randint(hour1.minutes, 59)
+    elif hours_digit == hour2.hours:
+        minutes_digit = random.randint(0, hour2.minutes)
+    else:
+        minutes_digit = random.randint(0, 59)
+
+    return Hour(hours_digit, minutes_digit)
+
+
+def round_to_quarter(hour: Hour):
+    """
+    Arrondit une heure au quart d'heure le plus proche.
+    """
+
+    quarter = 0
+
+    while not -7 <= hour.minutes - quarter <= 7 and quarter < 60:
+        quarter += 15
+
+    return Hour(
+        hour.hours + quarter // 60,
+        quarter
+    )
+
+
 if __name__ == '__main__':
-    t = Time()
+    '''t = Time()
 
     while True:
         t.update()
-        # print(t.value)
-        print(t.now)
+        print(t.value)
+        print(t.now)'''
+
+    '''h1 = Hour(0, 0)
+    h2 = Hour(24, 0)
+
+    while True:
+        h = Hour(input())
+        print(h.is_between(h1, h2))'''
+
+    '''while True:
+        user_input = input().split(", ")
+        h1, h2 = Hour(user_input[0]), Hour(user_input[1])
+        hour = random_hour(h1, h2)
+        print(hour, round_to_quarter(hour))'''
