@@ -1,11 +1,16 @@
+from enum import UNIQUE
+
 import pygame
 import random
 
-import biomes
 from game import Game
 import mytime
 
 H = mytime.Hour
+
+# Tags pour les batiments du quartier
+NECESSARY = -1  # Le lieu est nécessairement présent dans le quartier.
+ANY = -2  # Le lieu n'a pas de nombre prédéfini d'exemplaires.
 
 
 class NamedPlace:
@@ -34,7 +39,6 @@ class Town(NamedPlace):
                  game: Game,
                  name: str,
                  tile):
-
         super().__init__(game=game,
                          name=name,
                          tile=tile)
@@ -46,7 +50,7 @@ class DistrictType:
     def __init__(self,
                  game: Game,
                  name: str,
-                 places_type_pool: list):
+                 places_type_pool: dict):
         self.game = game
 
         self.name = name
@@ -60,7 +64,29 @@ class DownTown(DistrictType):
     def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Downtown',
-                         places_type_pool=[]  # TODO: Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
+                         places_type_pool={
+                             Arena: {'tags': (NECESSARY,),
+                                     'amount': 1},
+
+                             TownHall: {'tags': (NECESSARY,),
+                                        'amount': 1},
+                             Church: {'tags': (NECESSARY,),
+                                      'amount': 1},
+                             MarketPlace: {'tags': (NECESSARY,),
+                                           'amount': 1},
+                             FoodShop: {'tags': (),
+                                        'amount': ANY},
+                             BlacksmithShop: {'tags': (),
+                                              'amount': ANY},
+                             ArmourerShop: {'tags': (),
+                                            'amount': ANY},
+                             EnchantingShop: {'tags': (),
+                                              'amount': ANY},
+                             WeaponShop: {'tags': (),
+                                          'amount': ANY},
+                             EquipmentShop: {'tags': (),
+                                             'amount': ANY},
+                         }  # Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
                          )
 
 
@@ -68,7 +94,20 @@ class CommercialDistrict(DistrictType):
     def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Commercial district',
-                         places_type_pool=[]  # TODO : Boutiques (beaucoup)
+                         places_type_pool={
+                             FoodShop: {'tags': (),
+                                        'amount': ANY},
+                             BlacksmithShop: {'tags': (),
+                                              'amount': ANY},
+                             ArmourerShop: {'tags': (),
+                                            'amount': ANY},
+                             EnchantingShop: {'tags': (),
+                                              'amount': ANY},
+                             WeaponShop: {'tags': (),
+                                          'amount': ANY},
+                             EquipmentShop: {'tags': (),
+                                             'amount': ANY},
+                         }  # Boutiques (beaucoup)
                          )
 
 
@@ -77,7 +116,12 @@ class ResidentialDistrict(DistrictType):
     def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Residential district',
-                         places_type_pool=[]  # TODO :  Maisons, Tavernes, Auberges
+                         places_type_pool={
+                             Tavern: {'tags': (NECESSARY,),
+                                      'amount': 3},
+                             Inn: {'tags': (NECESSARY,),
+                                   'amount': 3}
+                         }  # Maisons, Tavernes, Auberges
                          )
 
 
@@ -86,7 +130,9 @@ class BadDisctrict(DistrictType):
     def __init__(self, game: Game):
         super().__init__(game=game,
                          name='Bad district',
-                         places_type_pool=[]  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
+                         places_type_pool={
+
+                         }  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
                          )
 
 
@@ -110,7 +156,7 @@ class District:
         Fonction qui initialise tous les lieux du quartier en leur déterminant un emplacement.
         """
 
-        for site in self.sites:
+        '''for site in self.sites:
             # liste de tous les types d'endroits qui peuvent être sur cet emplacement ET dans ce quartier
             site_pool = [place_type for place_type in self.type.places_pool if site.is_place_type_correct(place_type)]
             print(site_pool)
@@ -119,13 +165,78 @@ class District:
             place_type = random.choice(site_pool)
 
             # On fait spawn l'endroit
-            site.set_place(place_type())
+            site.set_place(place_type())'''
+        # On mélange tous les emplacements.
+
+        # On crée un dict de chaque type de lieu associé à tous les emplacements qui peuvent l'accueillir.
+        # On ordonne :
+        # -> En premier les lieux nécessaires, ensuite les autres
+        # -> Pour les lieux necessaires : on ordonne par ordre croissant de nb d'emplacements
+        # -> Pour les autres, on mélange.
+
+        # Pour chaque lieu de cette liste, dans l'ordre, on lui choisit un emplacement s'il en reste.
+
+        random.shuffle(self.sites)
+
+        pool = self.type.places_type_pool
+
+        necessary_pool = []
+        other_pool = []
+        for placetype in pool.keys():
+            if NECESSARY in pool[placetype]['tags']:
+                sites_list = [site for site in self.sites if site.is_place_type_correct(placetype)]
+                random.shuffle(sites_list)
+
+                necessary_pool.append({'type': placetype,
+                                       'amount': 1,
+                                       'sites': sites_list})
+                pool[placetype]['amount'] -= 1
+
+            if pool[placetype]['amount'] > 0 or pool[placetype]['amount'] == ANY:
+                other_pool.append({'type': placetype,
+                                   'amount': pool[placetype]['amount']})
+
+        # Ordonner par ordre croissant de nb d'emplacements
+        necessary_pool = sort_by_sites_amount(necessary_pool)
+
+        # On choisit l'emplacement des lieux nécessaires
+        for placetype in necessary_pool:
+            bool_done = False
+            i = 0
+            while not bool_done and i < len(placetype['sites']):
+                site = placetype['sites'][i]
+                if site.is_empty:
+                    site.set_place(placetype['type'](self.game))
+                    bool_done = True
+                else:
+                    i += 1
+
+        # On choisit pour les autres lieux
+        # On crée une liste des emplacements vides
+        empty_sites = [site for site in self.sites if site.is_empty]
+        random.shuffle(empty_sites)
+
+        for site in empty_sites:
+            # Liste des lieux restants compatibles
+            compatibles_places = [placetype for placetype in other_pool
+                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] != 0]
+
+            picked_place = random.choice(compatibles_places)
+            site.set_place(picked_place['type'](self.game))
+
+            for i in range(len(other_pool)):
+                if other_pool[i]['type'] == picked_place and other_pool[i]['amount'] != ANY:
+                    other_pool[i]['amount'] -= 1
+
+                    if other_pool[i]['amount'] == 0:
+                        other_pool.pop(i)
 
 
 class Site:
     """
     Classe représentant un emplacement de lieu d'un quartier / lieu-dit
     """
+
     def __init__(self,
                  game: Game,
                  place_types: tuple,
@@ -137,8 +248,12 @@ class Site:
         self.rect = rect
         self.place = None
 
+    @property
+    def is_empty(self):
+        return self.place is None
+
     def set_place(self, place):
-        assert place.type in self._place_types
+        assert type(place) in self._place_types, f"{place} n'est pas dans la liste des types de l'emplacement"
 
         self.place = place
 
@@ -146,7 +261,7 @@ class Site:
         return place_type in self._place_types
 
 
-class PlaceType:
+class Place:
     """
     Classe représentant le type d'un endroit.
     Exemple : Eglise est un type d'endroit. Il hérite donc des propriétés de PlaceType.
@@ -195,14 +310,14 @@ class PlaceType:
             closing_hour = mytime.round_to_quarter(closing_hour)
 
             opening_hour_tuple += ((
-                opening_hour,
-                closing_hour
-            ),)
+                                       opening_hour,
+                                       closing_hour
+                                   ),)
 
         return opening_hour_tuple
 
 
-class ShopType(PlaceType):
+class Shop(Place):
     """
     Classe représentant le type d'une boutique (quelconque).
     """
@@ -215,8 +330,7 @@ class ShopType(PlaceType):
         self.selling_items_pools = []  # TODO quand on aura la classe Item
 
 
-class FoodShop(ShopType):
-
+class FoodShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("06 30"), H("08 00")), (H("20 00"), H("22 00"))),
     )
@@ -227,8 +341,7 @@ class FoodShop(ShopType):
                          name='Food Shop')
 
 
-class Tavern(PlaceType):
-
+class Tavern(Place):
     OPENING_HOURS_RANGES = (
         (
             (H("00 00"), H("00 00")),
@@ -241,8 +354,7 @@ class Tavern(PlaceType):
                          name='Tavern')
 
 
-class Church(PlaceType):
-
+class Church(Place):
     OPENING_HOURS_RANGES = (
         (
             (H("09 00"), H("10 00")),
@@ -259,8 +371,7 @@ class Church(PlaceType):
                          name='Church')
 
 
-class BlacksmithShop(ShopType):
-
+class BlacksmithShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("06 00"), H("07 30")), (H("11 00"), H("12 00"))),
         ((H("12 30"), H("13 30")), (H("18 00"), H("18 00")))
@@ -271,8 +382,7 @@ class BlacksmithShop(ShopType):
                          name='Blacksmith Shop')
 
 
-class TownHall(PlaceType):
-
+class TownHall(Place):
     OPENING_HOURS_RANGES = (
         ((H("10 00"), H("10 00")), (H("12 00"), H("12 00"))),
         ((H("14 00"), H("14 00")), (H("17 00"), H("17 00")))
@@ -283,8 +393,7 @@ class TownHall(PlaceType):
                          name='TownHall')
 
 
-class Arena(PlaceType):
-
+class Arena(Place):
     OPENING_HOURS_RANGES = (
         ((H("17 00"), H("18 00")), (H("22 00"), H("24 00"))),
     )
@@ -295,8 +404,7 @@ class Arena(PlaceType):
                          name='Arena')
 
 
-class MarketPlace(PlaceType):
-
+class MarketPlace(Place):
     OPENING_HOURS_RANGES = (
         ((H("06 30"), H("07 00")), (H("12 00"), H("13 00"))),
     )
@@ -306,8 +414,7 @@ class MarketPlace(PlaceType):
                          name='Market Place')
 
 
-class ArmourerShop(ShopType):
-
+class ArmourerShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
         ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
@@ -318,8 +425,7 @@ class ArmourerShop(ShopType):
                          name='Armourer Shop')
 
 
-class EnchantingShop(ShopType):
-
+class EnchantingShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("15 00"), H("16 00")), (H("00 00"), H("02 30"))),
     )
@@ -329,8 +435,7 @@ class EnchantingShop(ShopType):
                          name='Enchanting Shop')
 
 
-class WeaponShop(ShopType):
-
+class WeaponShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
         ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
@@ -341,8 +446,7 @@ class WeaponShop(ShopType):
                          name='Weapon Shop')
 
 
-class EquipementShop(ShopType):
-
+class EquipmentShop(Shop):
     OPENING_HOURS_RANGES = (
         ((H("08 00"), H("10 00")), (H("11 00"), H("13 00"))),
         ((H("12 00"), H("14 00")), (H("17 00"), H("19 00"))),
@@ -350,11 +454,10 @@ class EquipementShop(ShopType):
 
     def __init__(self, game):
         super().__init__(game=game,
-                         name='Equipement Shop')
+                         name='Equipment Shop')
 
 
-class Inn(PlaceType):
-
+class Inn(Place):
     OPENING_HOURS_RANGES = (
         ((H("17 00"), H("18 00")), (H("10 00"), H("12 00"))),
     )
@@ -376,6 +479,25 @@ class Inn(PlaceType):
 #       WeaponShop (Magasin : Vendeur d'armes) X
 #       EquipmentShop (Magasin : Vendeur d'armures) X
 #       Inn (Auberge) X
+
+
+def sort_by_sites_amount(type_pool: list[dict]):
+    """
+    Trie la liste de type de lieu par nombre d'emplacements en ordre croissant
+    """
+    if len(type_pool) == 0:
+        return type_pool
+
+    new_list = []
+    while len(type_pool) > 0:
+        mini_i = 0
+        for i in range(len(type_pool) - 1):
+            if len(type_pool[i + 1]['sites']) < len(type_pool[mini_i]['sites']):
+                mini_i = i + 1
+        new_list.append(type_pool[mini_i])
+        type_pool.pop(mini_i)
+
+    return new_list
 
 
 if __name__ == '__main__':
