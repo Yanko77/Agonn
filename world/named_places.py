@@ -1,4 +1,3 @@
-from enum import UNIQUE
 
 import pygame
 import random
@@ -155,17 +154,6 @@ class District:
         """
         Fonction qui initialise tous les lieux du quartier en leur déterminant un emplacement.
         """
-
-        '''for site in self.sites:
-            # liste de tous les types d'endroits qui peuvent être sur cet emplacement ET dans ce quartier
-            site_pool = [place_type for place_type in self.type.places_pool if site.is_place_type_correct(place_type)]
-            print(site_pool)
-
-            # Choix aléatoire du type d'endroit qui spawn sur cet emplacement
-            place_type = random.choice(site_pool)
-
-            # On fait spawn l'endroit
-            site.set_place(place_type())'''
         # On mélange tous les emplacements.
 
         # On crée un dict de chaque type de lieu associé à tous les emplacements qui peuvent l'accueillir.
