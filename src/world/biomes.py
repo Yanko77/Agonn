@@ -3,6 +3,15 @@ from src import config
 
 
 class BiomeType:
+    """
+    Represents a type of biome.
+
+    It's defined  by:
+    - name: str, its name ('forest' for example)
+    - crossing_cost: int, a relative value representing how hard it is to cross this biome
+    - spawning_chance: int, the rarety of the biome
+    - color: tuple[int, int, int]
+    """
 
     def __init__(self,
                  name: str,
@@ -23,8 +32,7 @@ class BiomeType:
                                  (0, 0, 0, 0,  0,  0, 0, 0, 0),
                                  (0, 0, 0, 0,  0,  0, 0, 0, 0))
         self.spawning_spreading_chance = 100
-        self.area_size = 5  # Rayon de la zone autour du point central du biome dans laquelle aucun autre biome
-                            # ne peut spawn.
+        self.area_size = 5  # Area around the central point where no other biome is able to spawn.
 
         self.color = color
 
@@ -39,13 +47,6 @@ class Forest(BiomeType):
                          crossing_cost=2,
                          spawning_chance=60,
                          color=(6, 137, 6))
-
-        """self.set_pattern(
-            ((100, 80,  70,  80,  100),
-             (80,  100, 100, 100, 80),
-             (70,  100, 100, 100, 70),
-             (80,  100, 100, 100, 80),
-             (100, 80,  70,  80,  100))"""
         self.set_pattern(
             ((80, 60,  30,  20,  10,  20,  30, 60, 80),
              (60, 90,  70,  50,  30,  50,  70, 90, 60),
@@ -89,14 +90,6 @@ class Desert(BiomeType):
                          crossing_cost=4,
                          spawning_chance=30,
                          color=(255, 220, 0))
-
-        """self.set_pattern(
-            ((100, 60, 50, 60, 100),
-             (60, 100, 100, 100, 60),
-             (50, 100, 100, 100, 50),
-             (60, 100, 100, 100, 60),
-             (100, 60, 50, 60, 100))
-        )"""
         self.set_pattern(
             ((70, 35,  15,   5,   1,   5,  15, 35, 70),
              (35, 80,  80,  40,  10,  40,  80, 80, 35),
@@ -118,12 +111,6 @@ class Pond(BiomeType):  # Marais
                          crossing_cost=3,
                          spawning_chance=30,
                          color=(12, 72, 14))
-
-        '''((40,  0,   0,   0,  40),
-             (0,  100, 100, 100, 0),
-             (0,  100, 100, 100, 0),
-             (0,  100, 100, 100, 0),
-             (40,  0,   0,   0,  40))'''
 
         self.set_pattern(
 
@@ -147,14 +134,6 @@ class Field(BiomeType):
                          crossing_cost=1,
                          spawning_chance=100,
                          color=(99, 210, 0))
-
-        '''self.set_pattern(
-            ((100, 100, 100, 100, 100),
-             (100, 100, 100, 100, 100),
-             (100, 100, 100, 100, 100),
-             (100, 100, 100, 100, 100),
-             (100, 100, 100, 100, 100))
-        )'''
 
         self.set_pattern(
             (
@@ -182,14 +161,6 @@ class Mountains(BiomeType):
                          spawning_chance=40,
                          color=(108, 108, 108))
 
-        '''self.set_pattern(
-            ((0,    0,   0,   0,   0),
-             (0,    0,   0,   0,   0),
-             (100, 100, 100, 100, 100),
-             (0,    0,   0,   0,   0),
-             (0,    0,   0,   0,   0))
-        )'''
-
         self.set_pattern(
             (
                 (0,   0,   0,   0,   0,   0,   0,   0,   0),
@@ -213,12 +184,6 @@ class Water(BiomeType):
                          crossing_cost=5,
                          spawning_chance=41,
                          color=(0, 155, 255))
-        """self.set_pattern(
-            ((100,    0,   0,   0,   0),
-             (0,    100,   66,   33,   0),
-             (0,    66,   100,   66,   0),
-             (0,    33,   66,   100,   0),
-             (0,    0,   0,   0,   100)))"""
         self.set_pattern(
             ((100,  1,   0,   0,   0,   0,   0,   0,   0),
              (1,  100,   1,   0,   0,   0,   0,   0,   0),
@@ -235,8 +200,12 @@ class Water(BiomeType):
 
 class Biome:
     """
-    Objet qui représente un biome.
-    Il possède un type (si c'est une foret, un étang, un désert, etc) et concerne une liste de tuiles.
+    Represents a biome.
+
+    It's defined by:
+    - biome_type: BiomeType, the biome type (forest, desert, pond, ...)
+
+    It concerns a list of tiles.
     """
 
     def __init__(self,
@@ -254,6 +223,13 @@ class Biome:
 
 
 def get_random_biome(weights_on: bool = True) -> Biome:
+    """
+    Returns a random Biome objects among TYPES.
+    If 'weights_on' is True, considers the spawning chances of the biomes.
+
+    :param weights_on: bool
+    :returns : Biome
+    """
     if weights_on:
         biome_type = random.choices(
             population=TYPES,
@@ -269,8 +245,15 @@ def get_random_biome(weights_on: bool = True) -> Biome:
 
 def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
     """
-    Fait apparaitre le biome en fonction de son pattern de génération avec pour centre du pattern les coordonnées x, y.
-    Modifie directement la grille.
+    Spawns the 'biome' on the tile 'grid[y][x]'.
+    Does edit the grid.
+
+    :param grid: list[list[Tile]]
+    :param biome: Biome
+    :param x: int
+    :param y: int
+
+    :returns : list[list[Tile]], the edited grid
     """
 
     width = len(grid[0])
@@ -304,10 +287,18 @@ def spawn(grid: list, biome: Biome, x: int, y: int) -> list:
                     grid[grid_y][grid_x] = new_tile
 
 
-def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> list:
+def spread(grid: list[list['Tile']], row_i: int, column_i: int, biome: Biome, chance: int) -> list:
     """
-    Essaye de propager le 'biome' à la case 'grid[row_i][column_i]' avec une certaine probabilité 'chance' de réussir.
-    Renvoie la grille après modification.
+    Tries to spread the 'biome' to the tile 'grid[row_i][column_i]' with a probability of 'chance' to success.
+    Returns the edited grid.
+
+    :param grid: list[list[Tile]]
+    :param row_i: int
+    :param column_i: int
+    :param biome: Biome, the Biome to spread
+    :param chance: int, 0 <= chance <= 100
+
+    :returns : list[list[Tile]]
     """
 
     tile_biome = grid[row_i][column_i][0]
@@ -315,7 +306,7 @@ def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> 
 
     if tile_biome is None:
         r_value = random.randint(1, 100)
-        if r_value < chance:  # Spread réussi
+        if r_value < chance:  # Successful spread
             spreading_value = random.randint(80, 100) * chance / 100
             grid[row_i][column_i] = (biome, spreading_value)
             biome.add_generator((row_i, column_i))
@@ -334,8 +325,8 @@ def spread(grid: list, row_i: int, column_i: int, biome: Biome, chance: int) -> 
 
 def init() -> tuple:
     """
-    Génére aléatoirement des biomes sur la carte.
-    Renvoie tous les objets Biome ainsi générés
+    Randomly generates biomes on the map.
+    Returns all the Biomes objects generated like this.
     """
     all_biomes = ()
     grid = [[(None, 100) for _ in range(config.MAP_SIZE[0])] for _ in range(config.MAP_SIZE[1])]
@@ -401,7 +392,13 @@ def init() -> tuple:
     return all_biomes
 
 
-def _get_empty_tiles_pos(grid: list) -> tuple:
+def _get_empty_tiles_pos(grid: list[list['Tile']]) -> list[tuple[int, int]]:
+    """
+    Returns the list all the empty grid tiles locations.
+
+    :param grid: list[list[Tile]]
+    :returns : tuple[tuple[int, int]]
+    """
     empty_tiles_pos_list = []
 
     for row_i in range(len(grid)):
@@ -413,6 +410,14 @@ def _get_empty_tiles_pos(grid: list) -> tuple:
 
 
 def _is_in_grid(grid, x, y):
+    """
+    Returns True if gris[y][x] exists.
+    Otherwise, returns False.
+
+    :param grid: list[list[Tile]]
+    :param x: int
+    :param y: int
+    """
     return 0 <= y < len(grid) and 0 <= x < len(grid[0])
 
 

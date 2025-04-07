@@ -7,12 +7,11 @@ Fichier qui gère la carte du monde avec :
 
 import pygame
 
-import biomes
-from named_places import NamedPlace
-
 from dataclasses import dataclass
-from src.config import MAP_SIZE
 import time
+
+import biomes
+from src.config import MAP_SIZE
 
 
 class Map:
@@ -36,7 +35,7 @@ class Map:
 
     def init_grid(self) -> list:
         """
-        Initialise la grille de la carte.
+        Initialize the map grid.
         """
 
         # Création de la grille
@@ -46,10 +45,8 @@ class Map:
                      y=row_i,
                      biome=None,
                      place=None)
-
                 for column_i in range(self.width)
             ]
-
             for row_i in range(self.height)
         ]
 
@@ -121,4 +118,3 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 pygame.quit()
                 running = False
-
