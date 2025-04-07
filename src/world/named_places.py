@@ -1,9 +1,8 @@
-
 import pygame
 import random
 
-from game import Game
-import mytime
+from src.game import Game
+from src import mytime
 
 H = mytime.Hour
 
@@ -13,6 +12,14 @@ ANY = -2  # Le lieu n'a pas de nombre prédéfini d'exemplaires.
 
 
 class NamedPlace:
+    """
+    Represents a named place.
+
+    It's defined by:
+    - game
+    - name, the place name
+    - tile: Tile, where the place is located
+    """
 
     def __init__(self,
                  game: Game,
@@ -21,18 +28,30 @@ class NamedPlace:
         self.game = game
 
         self.name = name
-
-        self.tile = tile  # Tuile sur laquelle le lieu-dit se situe.
-
-        self.roads = []  # Liste des routes "officielles" sortantes
-
-        self.size = 1  # Taille du lieu-dit. Valeur forcément impaire.
+        self.tile = tile
+        self.roads = set()  # officials roads set
+        self.size = 1  # place size. (has to be odd)
 
     def add_road(self, road):
+        """
+        Adds a road to the place.
+
+        :param road: Road
+        :return: None
+        """
         self.roads.append(road)
 
 
 class Town(NamedPlace):
+    """
+    Represents a town.
+
+    A Town object is a type of NamedPlace.
+    It's defined by:
+    - game
+    - name, the town name
+    - tile: Tile, where the town is located
+    """
 
     def __init__(self,
                  game: Game,
@@ -42,117 +61,30 @@ class Town(NamedPlace):
                          name=name,
                          tile=tile)
 
-        self.districts = []  # Liste des quartiers de la ville : Centre-ville, Quartier commercial, Résidentiel
-
-
-class DistrictType:
-    def __init__(self,
-                 game: Game,
-                 name: str,
-                 places_type_pool: dict):
-        self.game = game
-
-        self.name = name
-
-        # Liste de tous les types d'endroits qui peuvent être dans ce type de quartier
-        self.places_type_pool = places_type_pool
-
-
-class DownTown(DistrictType):
-
-    def __init__(self, game: Game):
-        super().__init__(game=game,
-                         name='Downtown',
-                         places_type_pool={
-                             Arena: {'tags': (NECESSARY,),
-                                     'amount': 1},
-
-                             TownHall: {'tags': (NECESSARY,),
-                                        'amount': 1},
-                             Church: {'tags': (NECESSARY,),
-                                      'amount': 1},
-                             MarketPlace: {'tags': (NECESSARY,),
-                                           'amount': 1},
-                             FoodShop: {'tags': (),
-                                        'amount': ANY},
-                             BlacksmithShop: {'tags': (),
-                                              'amount': ANY},
-                             ArmourerShop: {'tags': (),
-                                            'amount': ANY},
-                             EnchantingShop: {'tags': (),
-                                              'amount': ANY},
-                             WeaponShop: {'tags': (),
-                                          'amount': ANY},
-                             EquipmentShop: {'tags': (),
-                                             'amount': ANY},
-                         }  # Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
-                         )
-
-
-class CommercialDistrict(DistrictType):
-    def __init__(self, game: Game):
-        super().__init__(game=game,
-                         name='Commercial district',
-                         places_type_pool={
-                             FoodShop: {'tags': (),
-                                        'amount': ANY},
-                             BlacksmithShop: {'tags': (),
-                                              'amount': ANY},
-                             ArmourerShop: {'tags': (),
-                                            'amount': ANY},
-                             EnchantingShop: {'tags': (),
-                                              'amount': ANY},
-                             WeaponShop: {'tags': (),
-                                          'amount': ANY},
-                             EquipmentShop: {'tags': (),
-                                             'amount': ANY},
-                         }  # Boutiques (beaucoup)
-                         )
-
-
-class ResidentialDistrict(DistrictType):
-
-    def __init__(self, game: Game):
-        super().__init__(game=game,
-                         name='Residential district',
-                         places_type_pool={
-                             Tavern: {'tags': (NECESSARY,),
-                                      'amount': 3},
-                             Inn: {'tags': (NECESSARY,),
-                                   'amount': 3}
-                         }  # Maisons, Tavernes, Auberges
-                         )
-
-
-class BadDisctrict(DistrictType):
-
-    def __init__(self, game: Game):
-        super().__init__(game=game,
-                         name='Bad district',
-                         places_type_pool={
-
-                         }  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
-                         )
+        self.districts = set()  # Town districts list : Centre-ville, Quartier commercial, Résidentiel
 
 
 class District:
     """
-    Classe représentant un quartier d'une ville
+    Represents a town district.
     """
 
     def __init__(self,
                  game: Game,
-                 district_type: DistrictType,
+                 name: str,
+                 places_type_pool: dict,
                  sites: list):
         self.game = game
 
-        self.type = district_type
+        self.name = name
+
+        self.places_type_pool = places_type_pool
 
         self.sites = sites
 
     def init_places(self):
         """
-        Fonction qui initialise tous les lieux du quartier en leur déterminant un emplacement.
+        Initialize all district places by determining their location (site).
         """
         # On mélange tous les emplacements.
 
@@ -166,7 +98,7 @@ class District:
 
         random.shuffle(self.sites)
 
-        pool = self.type.places_type_pool
+        pool = self.places_type_pool
 
         necessary_pool = []
         other_pool = []
@@ -220,9 +152,98 @@ class District:
                         other_pool.pop(i)
 
 
+class DownTown(District):
+
+    def __init__(self,
+                 game: Game,
+                 sites: list):
+        super().__init__(game=game,
+                         name='Downtown',
+                         places_type_pool={
+                             Arena: {'tags': (NECESSARY,),
+                                     'amount': 1},
+
+                             TownHall: {'tags': (NECESSARY,),
+                                        'amount': 1},
+                             Church: {'tags': (NECESSARY,),
+                                      'amount': 1},
+                             MarketPlace: {'tags': (NECESSARY,),
+                                           'amount': 1},
+                             FoodShop: {'tags': (),
+                                        'amount': ANY},
+                             BlacksmithShop: {'tags': (),
+                                              'amount': ANY},
+                             ArmourerShop: {'tags': (),
+                                            'amount': ANY},
+                             EnchantingShop: {'tags': (),
+                                              'amount': ANY},
+                             WeaponShop: {'tags': (),
+                                          'amount': ANY},
+                             EquipmentShop: {'tags': (),
+                                             'amount': ANY},
+                         },  # Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
+                         sites=sites
+                         )
+
+
+class CommercialDistrict(District):
+    def __init__(self,
+                 game: Game,
+                 sites: list):
+        super().__init__(game=game,
+                         name='Commercial district',
+                         places_type_pool={
+                             FoodShop: {'tags': (),
+                                        'amount': ANY},
+                             BlacksmithShop: {'tags': (),
+                                              'amount': ANY},
+                             ArmourerShop: {'tags': (),
+                                            'amount': ANY},
+                             EnchantingShop: {'tags': (),
+                                              'amount': ANY},
+                             WeaponShop: {'tags': (),
+                                          'amount': ANY},
+                             EquipmentShop: {'tags': (),
+                                             'amount': ANY},
+                         },  # Boutiques (beaucoup)
+                         sites=sites
+                         )
+
+
+class ResidentialDistrict(District):
+
+    def __init__(self,
+                 game: Game,
+                 sites: list):
+        super().__init__(game=game,
+                         name='Residential district',
+                         places_type_pool={
+                             Tavern: {'tags': (NECESSARY,),
+                                      'amount': 3},
+                             Inn: {'tags': (NECESSARY,),
+                                   'amount': 3}
+                         },  # Maisons, Tavernes, Auberges
+                         sites=sites
+                         )
+
+
+class BadDistrict(District):
+
+    def __init__(self,
+                 game: Game,
+                 sites: list):
+        super().__init__(game=game,
+                         name='Bad district',
+                         places_type_pool={
+
+                         },  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
+                         sites=sites
+                         )
+
+
 class Site:
     """
-    Classe représentant un emplacement de lieu d'un quartier / lieu-dit
+    Represents a site of a district or a named place
     """
 
     def __init__(self,
@@ -251,8 +272,9 @@ class Site:
 
 class Place:
     """
-    Classe représentant le type d'un endroit.
-    Exemple : Eglise est un type d'endroit. Il hérite donc des propriétés de PlaceType.
+    Represents a town place.
+
+    All place types inherit from
     """
 
     OPENING_HOURS_RANGES = (
@@ -471,10 +493,8 @@ class Inn(Place):
 
 def sort_by_sites_amount(type_pool: list[dict]):
     """
-    Trie la liste de type de lieu par nombre d'emplacements en ordre croissant
+    Sorts the place type list by amount of sites (ascending order)
     """
-    if len(type_pool) == 0:
-        return type_pool
 
     new_list = []
     while len(type_pool) > 0:

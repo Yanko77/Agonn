@@ -1,6 +1,6 @@
 import pygame
 
-from mytime import Time
+from src.mytime import Time
 
 
 class Game:

@@ -11,7 +11,7 @@ import biomes
 from named_places import NamedPlace
 
 from dataclasses import dataclass
-from config import MAP_SIZE
+from src.config import MAP_SIZE
 import time
 
 

@@ -1,5 +1,5 @@
 import random
-import config
+from src import config
 
 
 class BiomeType:
