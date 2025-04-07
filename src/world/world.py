@@ -1,8 +1,5 @@
 """
-Fichier qui gère la carte du monde avec :
-- les Lieux-dits : Villes, Villages, Donjons...
-- les routes
-- les biomes
+File managing the world map.
 """
 
 import pygame
