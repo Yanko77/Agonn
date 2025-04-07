@@ -82,5 +82,8 @@
         "amount": 3
       }
     }
+  },
+  "Bad district": {
+    "pool": {}
   }
 }

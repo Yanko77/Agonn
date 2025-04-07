@@ -7,8 +7,10 @@ from src.game import Game
 from src import mytime
 
 H = mytime.Hour
+
 NECESSARY = -1
 ANY = -2
+
 
 class NamedPlace:
     """
@@ -79,7 +81,11 @@ class District:
 
         self.sites = sites
 
-    def init_places_type_pool(self) -> dict['Place': dict]:
+    def init_places_type_pool(self) -> dict['Place', dict]:
+        """
+        Returns the places type pool of the district.
+        The place type pool infos are written in 'districts.json' file.
+        """
         res = dict()
 
         pool_dict = get_district_places_type_pool(self.name)
@@ -95,70 +101,64 @@ class District:
         """
         Initialize all district places by determining their location (site).
         """
-        # On mélange tous les emplacements.
 
-        # On crée un dict de chaque type de lieu associé à tous les emplacements qui peuvent l'accueillir.
-        # On ordonne :
-        # -> En premier les lieux nécessaires, ensuite les autres
-        # -> Pour les lieux necessaires : on ordonne par ordre croissant de nb d'emplacements
-        # -> Pour les autres, on mélange.
-
-        # Pour chaque lieu de cette liste, dans l'ordre, on lui choisit un emplacement s'il en reste.
-
+        # Shuffle all the sites
         random.shuffle(self.sites)
 
-        pool = self.places_type_pool
+        # Split the pool
+        necessary_pool, other_pool = self._split_pools()
 
-        necessary_pool = []
-        other_pool = []
-        for placetype in pool.keys():
-            if NECESSARY in pool[placetype]['tags']:
-                sites_list = [site for site in self.sites if site.is_place_type_correct(placetype)]
-                random.shuffle(sites_list)
-
-                necessary_pool.append({'type': placetype,
-                                       'amount': 1,
-                                       'sites': sites_list})
-                pool[placetype]['amount'] -= 1
-
-            if pool[placetype]['amount'] > 0 or pool[placetype]['amount'] == ANY:
-                other_pool.append({'type': placetype,
-                                   'amount': pool[placetype]['amount']})
-
-        # Ordonner par ordre croissant de nb d'emplacements
+        # Sort the necessary pool by available sites amount
         necessary_pool = sort_by_sites_amount(necessary_pool)
 
-        # On choisit l'emplacement des lieux nécessaires
-        for placetype in necessary_pool:
-            bool_done = False
-            i = 0
-            while not bool_done and i < len(placetype['sites']):
-                site = placetype['sites'][i]
-                if site.is_empty:
-                    site.set_place(placetype['type'](self.game))
-                    bool_done = True
-                else:
-                    i += 1
+        # Choose the location of the necessary
+        for place_infos in necessary_pool:
+            place = place_infos['type'](self.game)
+            sites = place_infos['sites']
 
-        # On choisit pour les autres lieux
-        # On crée une liste des emplacements vides
+            for site in sites:
+                if site.is_empty:
+                    site.set_place(place)
+                    break
+
+        # Choose the location of the other
         empty_sites = [site for site in self.sites if site.is_empty]
-        random.shuffle(empty_sites)
 
         for site in empty_sites:
-            # Liste des lieux restants compatibles
             compatibles_places = [placetype for placetype in other_pool
-                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] >= 0]
+                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] != 0]
 
             picked_place = random.choice(compatibles_places)
             site.set_place(picked_place['type'](self.game))
 
-            for i in range(len(other_pool)):
-                if other_pool[i]['type'] == picked_place and other_pool[i]['amount'] != ANY:
-                    other_pool[i]['amount'] -= 1
+            if picked_place['amount'] != ANY:
+                picked_place['amount'] -= 1
 
-                    if other_pool[i]['amount'] == 0:
-                        other_pool.pop(i)
+    def _split_pools(self) -> tuple[list[dict], list[dict]]:
+        """
+        Splits the places type pool into 2 differents pools:
+        - a necessary pool : it contains all necessary places. Those places will be placed first
+        - another pool : it contains all the other places.
+
+        :returns: tuple[list[dict], list[dict]]
+        """
+        pool = self.places_type_pool
+
+        necessary_pool = list()
+        other_pool = list()
+
+        for place in pool.keys():
+            if NECESSARY in pool[place]['tags']:
+                necessary_pool.append({'type': place,
+                                       'sites': [site for site in self.sites if site.is_place_type_correct(place)]})
+
+                pool[place]['amount'] -= 1
+
+            if pool[place]['amount'] > 0 or pool[place]['amount'] == ANY:
+                other_pool.append({'type': place,
+                                   'amount': pool[place]['amount']})
+
+        return necessary_pool, other_pool
 
 
 class Site:
@@ -185,12 +185,18 @@ class Site:
         return self.place is None
 
     def set_place(self, place):
-        assert type(place) in self._place_types, f"{place} n'est pas dans la liste des types de l'emplacement"
+        assert type(place) in self._place_types, f"{place} isn't in the list of types of this site"
 
         self.place = place
 
-    def is_place_type_correct(self, place_type):
-        return place_type in self._place_types
+    def is_place_type_correct(self, place: object) -> bool:
+        """
+        Returns True if the place can be placed on this site.
+
+        :param place: Place class
+        :returns: bool
+        """
+        return place in self._place_types
 
 
 class Place:
@@ -484,8 +490,5 @@ def sort_by_sites_amount(type_pool: list[dict]):
 
 
 if __name__ == '__main__':
-    a = ResidentialDistrict('', [Site('', (Inn, Tavern), i) for i in range(6)])
-    print(a.sites)
-    print(a.places_type_pool)
-    a.init_places()
-    print(a.sites)
+    from tests.tests_named_places import exec_tests
+    exec_tests()
