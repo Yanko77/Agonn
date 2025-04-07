@@ -1,0 +1,86 @@
+{
+  "Commercial district": {
+    "pool": {
+    "FoodShop": {
+      "tags": [],
+      "amount": -2
+    },
+    "BlacksmithShop": {
+      "tags": [],
+      "amount": -2
+    },
+    "ArmourerShop": {
+      "tags": [],
+      "amount": -2
+    },
+    "EnchantingShop": {
+      "tags": [],
+      "amount": -2
+    },
+    "WeaponShop": {
+      "tags": [],
+      "amount": -2
+    },
+    "EquipmentShop": {
+      "tags": [],
+      "amount": -2
+    }
+  }
+  },
+  "Downtown": {
+    "pool": {
+      "Arena": {
+        "tags": [-1],
+        "amount": 1
+      },
+      "TownHall": {
+        "tags": [-1],
+        "amount": 1
+      },
+      "Church": {
+        "tags": [-1],
+        "amount": 1
+      },
+      "MarketPlace": {
+        "tags": [],
+        "amount": -2
+      },
+      "FoodShop": {
+        "tags": [],
+        "amount": -2
+      },
+      "BlacksmithShop": {
+        "tags": [],
+        "amount": -2
+      },
+      "ArmourerShop": {
+        "tags": [],
+        "amount": -2
+      },
+      "EnchantingShop": {
+        "tags": [],
+        "amount": -2
+      },
+      "WeaponShop": {
+        "tags": [],
+        "amount": -2
+      },
+      "EquipmentShop": {
+        "tags": [],
+        "amount": -2
+      }
+    }
+  },
+  "Residential district": {
+    "pool": {
+      "Tavern": {
+        "tags": [-1],
+        "amount": 3
+      },
+      "Inn": {
+        "tags": [-1],
+        "amount": 3
+      }
+    }
+  }
+}

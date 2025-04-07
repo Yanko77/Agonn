@@ -1,15 +1,14 @@
 import pygame
 import random
+import json
+import pprint
 
 from src.game import Game
 from src import mytime
 
 H = mytime.Hour
-
-# Tags pour les batiments du quartier
-NECESSARY = -1  # Le lieu est nécessairement présent dans le quartier.
-ANY = -2  # Le lieu n'a pas de nombre prédéfini d'exemplaires.
-
+NECESSARY = -1
+ANY = -2
 
 class NamedPlace:
     """
@@ -71,15 +70,26 @@ class District:
     def __init__(self,
                  game: Game,
                  name: str,
-                 places_type_pool: dict,
                  sites: list):
         self.game = game
 
         self.name = name
 
-        self.places_type_pool = places_type_pool
+        self.places_type_pool = self.init_places_type_pool()
 
         self.sites = sites
+
+    def init_places_type_pool(self) -> dict['Place': dict]:
+        res = dict()
+
+        pool_dict = get_district_places_type_pool(self.name)
+
+        for class_name in pool_dict.keys():
+            class_ = globals()[class_name]
+
+            res[class_] = pool_dict[class_name]
+
+        return res
 
     def init_places(self):
         """
@@ -138,7 +148,7 @@ class District:
         for site in empty_sites:
             # Liste des lieux restants compatibles
             compatibles_places = [placetype for placetype in other_pool
-                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] != 0]
+                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] >= 0]
 
             picked_place = random.choice(compatibles_places)
             site.set_place(picked_place['type'](self.game))
@@ -166,6 +176,9 @@ class Site:
 
         self.rect = rect
         self.place = None
+
+    def __repr__(self):
+        return f"Site({self.place.__class__.__name__})"
 
     @property
     def is_empty(self):
@@ -258,31 +271,7 @@ class DownTown(District):
                  sites: list):
         super().__init__(game=game,
                          name='Downtown',
-                         places_type_pool={
-                             Arena: {'tags': (NECESSARY,),
-                                     'amount': 1},
-
-                             TownHall: {'tags': (NECESSARY,),
-                                        'amount': 1},
-                             Church: {'tags': (NECESSARY,),
-                                      'amount': 1},
-                             MarketPlace: {'tags': (NECESSARY,),
-                                           'amount': 1},
-                             FoodShop: {'tags': (),
-                                        'amount': ANY},
-                             BlacksmithShop: {'tags': (),
-                                              'amount': ANY},
-                             ArmourerShop: {'tags': (),
-                                            'amount': ANY},
-                             EnchantingShop: {'tags': (),
-                                              'amount': ANY},
-                             WeaponShop: {'tags': (),
-                                          'amount': ANY},
-                             EquipmentShop: {'tags': (),
-                                             'amount': ANY},
-                         },  # Place du marché, Arène, Ecoles?, Boutiques, Hotel de ville, Eglise
-                         sites=sites
-                         )
+                         sites=sites)
 
 
 class CommercialDistrict(District):
@@ -291,22 +280,7 @@ class CommercialDistrict(District):
                  sites: list):
         super().__init__(game=game,
                          name='Commercial district',
-                         places_type_pool={
-                             FoodShop: {'tags': (),
-                                        'amount': ANY},
-                             BlacksmithShop: {'tags': (),
-                                              'amount': ANY},
-                             ArmourerShop: {'tags': (),
-                                            'amount': ANY},
-                             EnchantingShop: {'tags': (),
-                                              'amount': ANY},
-                             WeaponShop: {'tags': (),
-                                          'amount': ANY},
-                             EquipmentShop: {'tags': (),
-                                             'amount': ANY},
-                         },  # Boutiques (beaucoup)
-                         sites=sites
-                         )
+                         sites=sites)
 
 
 class ResidentialDistrict(District):
@@ -316,14 +290,7 @@ class ResidentialDistrict(District):
                  sites: list):
         super().__init__(game=game,
                          name='Residential district',
-                         places_type_pool={
-                             Tavern: {'tags': (NECESSARY,),
-                                      'amount': 3},
-                             Inn: {'tags': (NECESSARY,),
-                                   'amount': 3}
-                         },  # Maisons, Tavernes, Auberges
-                         sites=sites
-                         )
+                         sites=sites)
 
 
 class BadDistrict(District):
@@ -333,11 +300,7 @@ class BadDistrict(District):
                  sites: list):
         super().__init__(game=game,
                          name='Bad district',
-                         places_type_pool={
-
-                         },  # TODO : Boutiques marché noir, arènes illegales, tavernes malfamées
-                         sites=sites
-                         )
+                         sites=sites)
 
 
 class FoodShop(Shop):
@@ -491,6 +454,18 @@ class Inn(Place):
 #       Inn (Auberge) X
 
 
+def get_district_places_type_pool(name: str) -> dict[str: dict]:
+    """
+    Returns the places types dict of the district.
+
+    :param name: str
+    :returns: dict[str: dict]
+    """
+
+    with open('districts.json', 'r') as file:
+        return json.load(file)[name]['pool']
+
+
 def sort_by_sites_amount(type_pool: list[dict]):
     """
     Sorts the place type list by amount of sites (ascending order)
@@ -509,4 +484,8 @@ def sort_by_sites_amount(type_pool: list[dict]):
 
 
 if __name__ == '__main__':
-    pass
+    a = ResidentialDistrict('', [Site('', (Inn, Tavern), i) for i in range(6)])
+    print(a.sites)
+    print(a.places_type_pool)
+    a.init_places()
+    print(a.sites)
