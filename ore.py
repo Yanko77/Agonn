@@ -4,6 +4,14 @@ import random
 class CrystalStats:
     """
     Represents the crystal stats of an object.
+
+    6 stats (50 points to split):
+    - INTELLIGENCE
+    - POWER
+    - DEXTERITY
+    - CONSTITUTION
+    - AGILITY
+    - PERCEPTION
     """
 
     def __init__(self, statsl: list[int, int, int, int, int, int] = None):
