@@ -6,13 +6,19 @@ import src.config as config
 
 class _Set:
     """
-    This class is a set implementation of which it's possible to get a random element with a complexity of O(1).
+    This class is a ``set`` implementation of which it's possible to get a random element, remove an element
+    and do ``.__countains__()`` with a complexity of O(1).
     """
     def __init__(self, data: list):
         self.data = data
         self.data_map = {self.data[i]: i for i in range(len(self.data))}
 
     def remove(self, item):
+        """
+        Remove ``item`` from self.
+
+        Complexity : O(1)
+        """
         # Get the last element and the index of the item to remove
         last = self.data[-1]
         index = self.data_map[item]
@@ -26,14 +32,85 @@ class _Set:
 
         # Pop the last
         self.data.pop()
-        # Pop item from data_map. ( O(n) = 1 )
+        # Pop item from data_map. ( O(1) )
         self.data_map.pop(item)
 
     def random_choice(self):
+        """
+        Returns a random element from self.
+
+        Complexity : O(1)
+        """
         return random.choice(self.data)
 
     def __contains__(self, item):
+        """
+        Returns True if ``item`` is in self.
+
+        Complexity : O(1)
+        """
         return item in self.data_map
+
+    def __len__(self):
+        return len(self.data)
+
+    def __iter__(self):
+        for item in self.data:
+            yield item
+
+
+class _GridTile:
+    """
+    Represents a tile of the biome generation grid.
+    """
+
+    def __init__(self, pos, biome, spr):
+        self.y, self.x = pos
+        self.biome = biome
+        self.spr = spr
+
+        self.neighbors = self.init_neighbors()
+
+    def init_neighbors(self):
+        """
+        Returns the neighbors pos list.
+        """
+        _neighbors = {(self.y-1, self.x),
+                      (self.y+1, self.x),
+                      (self.y, self.x-1),
+                      (self.y, self.x+1)}
+        return _Set([neigh for neigh in _neighbors if _is_in(neigh[1], neigh[0], config.MAP_SIZE)])
+
+    def spread(self, grid):
+        """
+        Tries to spread its biome to its neighbors.
+
+        If a neighbor does have its attribute ``spr`` up to 100, removes this neighbor from ``self.neighbors``
+        """
+
+        _to_remove = set()
+        for neigh_pos in self.neighbors:
+            neigh = grid.get(neigh_pos, None)
+
+            if neigh is None:
+                if random.randint(1, 100) < self.spr:
+                    spr_value = random.randint(8, 10) * self.spr // 10
+                    grid[neigh_pos] = _GridTile(neigh_pos, self.biome, spr_value)
+
+            elif neigh.biome == self.biome and neigh.spr < 100:
+                incr = round(self.spr / 10)
+                neigh.incr_spr(incr)
+
+            elif neigh.spr == 100:
+                _to_remove.add(neigh_pos)
+
+        for neigh_pos in _to_remove:
+            self.neighbors.remove(neigh_pos)
+
+    def incr_spr(self, incr):
+        self.spr += incr
+        if self.spr > 100:
+            self.spr = 100
 
 
 class Biome:
@@ -57,11 +134,14 @@ class Biome:
 
         self.tiles_list = ()
 
+    def __eq__(self, other):
+        return self.name == other.name
+
 
 def get_random_biome(weights_on: bool = True) -> Biome:
     """
-    Returns a random Biome objects among TYPES.
-    If 'weights_on' is True, considers the spawning chances of the biomes.
+    Returns a random ``Biome`` objects among ``TYPES``.
+    If ``weights_on`` is True, considers the spawning chances of the biomes.
 
     :param weights_on: bool
     :returns : Biome
@@ -81,7 +161,7 @@ def get_random_biome(weights_on: bool = True) -> Biome:
 
 def spawn(grid: dict, biome: Biome, x: int, y: int):
     """
-    Spawns the 'biome' on the tile (y, x) of the grid.
+    Spawns the ``biome`` on the tile (y, x) of the grid.
     Does edit the grid.
 
     :param grid: set
@@ -89,44 +169,10 @@ def spawn(grid: dict, biome: Biome, x: int, y: int):
     :param x: int
     :param y: int
     """
-    grid[(y, x)] = (biome, 100)
+    grid[(y, x)] = _GridTile((y, x), biome, 100)
 
 
-def spread(grid: dict[tuple[int, int], tuple[Biome, int]], x: int, y: int, biome: Biome, chance: int) -> bool:
-    """
-    Tries to spread the 'biome' to the tile 'grid[(y, x)]' with a probability of 'chance' to success.
-    Returns the edited grid.
-
-    :param grid: dict[tuple[int, int], tuple[Biome, int]]
-    :param x: int
-    :param y: int
-    :param biome: Biome, the Biome to spread
-    :param chance: int, 0 <= chance <= 100
-
-    :returns : bool, True if the spread is successful (the tile had no biome and got one), otherwise False
-    """
-
-    tile_biome, tile_spr_value = grid.get((y, x), (None, 100))
-
-    if tile_biome is None:
-        if random.randint(1, 100) < chance:
-            spr_value = random.randint(8, 10) * chance / 10
-            grid[(y, x)] = (biome, spr_value)
-            return True
-
-    elif tile_biome == biome and tile_spr_value < 100:
-        incr = round(chance / 10)
-        if tile_spr_value + incr > 100:
-            tile_spr_value = 100
-        else:
-            tile_spr_value += incr
-
-        grid[(y, x)] = (tile_biome, tile_spr_value)
-
-    return False
-
-
-def spawn_all_biomes() -> tuple[tuple, dict[tuple[int, int], tuple[Biome, int]]]:
+def spawn_all_biomes() -> tuple[tuple, dict[tuple[int, int], _GridTile]]:
     """
     Spawns all biomes on a map.
     Returns the biomes list and the generated grid.
@@ -168,27 +214,46 @@ def spawn_all_biomes() -> tuple[tuple, dict[tuple[int, int], tuple[Biome, int]]]
     return all_biomes, grid
 
 
+def spread_all_biomes(grid):
+    """
+    grid example:
+    {
+        (1, 1): (FOREST, 100),
+        ...
+    }
+    """
+    t1, t0 = 0, 0
+
+    stop = False
+    while not stop:
+        grid_copy = grid.copy()
+
+        for tile_pos in grid_copy.keys():
+
+            t0 += time.perf_counter()
+            grid[tile_pos].spread(grid)
+            t1 += time.perf_counter()
+
+        if len(grid) >= config.MAP_SIZE[0] * config.MAP_SIZE[1]:
+            stop = True
+
+    print(f'TEMPS SPREAD : {t1 - t0}')
+
+
 def init() -> tuple:
     """
     Randomly generates biomes on the map.
     Returns the map grid.
     """
+
     t0 = time.perf_counter()
     all_biomes, grid = spawn_all_biomes()
     t1 = time.perf_counter()
-    print(t1 - t0)
+
+    print(f"TEMPS SPAWN : {t1 - t0}")
 
     # Biome spreading
-    for i in range(0):
-        grid_copy = grid.copy()
-        for tile_pos in grid_copy.keys():
-            tile = grid[tile_pos]
-            y, x = tile_pos
-
-            _dir_incrs = {(-1, 0), (1, 0), (0, -1), (0, 1)}
-            for y_incr, x_incr in _dir_incrs:
-                if _is_in(x + x_incr, y + y_incr, config.MAP_SIZE):
-                    spread(grid, x + x_incr, y + y_incr, tile[0], tile[1])
+    spread_all_biomes(grid)
 
     return all_biomes, grid
 

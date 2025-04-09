@@ -16,8 +16,13 @@ class Map:
     def __init__(self):
         self.size = MAP_SIZE
 
+        t0, t1 = 0, 0
+        t0 += time.perf_counter()
         self.biomes, _biomes_grid = biomes.init()  # Liste des objets Biomes de la carte.
+        t1 += time.perf_counter()
+
         self.grid = self.init_grid(_biomes_grid)
+        print(f"TEMPS BIOMES INIT: {t1 - t0}")
 
     @property
     def width(self):
@@ -47,13 +52,8 @@ class Map:
             for row_i in range(self.height)
         ]
 
-        '''# Ajout des biomes de chaque tuile
-        for biome in self.biomes:
-            for tile_pos in biome.generator_tiles_pos_list:
-                grid[tile_pos[0]][tile_pos[1]].biome = biome'''
-
         for y, x in biomes_grid.keys():
-            grid[y][x].biome = biomes_grid[(y, x)][0]
+            grid[y][x].biome = biomes_grid[(y, x)].biome
 
         return grid
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     m = Map()
     t1 = time.perf_counter()
 
-    print(t1 - t0)
+    print(f"TEMPS TOTAL: {t1 - t0}")
 
     screen = pygame.display.set_mode((MAP_SIZE[0]*4, MAP_SIZE[1]*4))
 
