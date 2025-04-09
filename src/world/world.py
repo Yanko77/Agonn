@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     print(t1 - t0)
 
-    screen = pygame.display.set_mode((MAP_SIZE[0], MAP_SIZE[1]))
+    screen = pygame.display.set_mode((MAP_SIZE[0]*4, MAP_SIZE[1]*4))
 
     running = True
     while running:
@@ -110,7 +110,7 @@ if __name__ == '__main__':
                 tile = m.get_tile(row_i, column_i)
                 pygame.draw.rect(screen,
                                  tile.biome.color if tile.biome is not None else (0, 0, 0),
-                                 pygame.Rect(column_i, row_i, 1, 1))
+                                 pygame.Rect(column_i*4, row_i*4, 4, 4))
 
         pygame.display.flip()
 
