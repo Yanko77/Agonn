@@ -1,4 +1,4 @@
-import random
+'''import random
 from src import config
 
 
@@ -422,3 +422,4 @@ def _is_in_grid(grid, x, y):
 
 
 TYPES = (Forest(), Volcano(), Desert(), Pond(), Field(), Mountains(), Water())
+'''
