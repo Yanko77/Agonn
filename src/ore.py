@@ -5,8 +5,9 @@ class CrystalStats:
     """
     Represents the crystal stats of an object.
 
-    6 stats (50 points to split):
+    7 stats (100 points to split):
     - INTELLIGENCE
+    - STRENGTH
     - POWER
     - DEXTERITY
     - CONSTITUTION
@@ -14,12 +15,17 @@ class CrystalStats:
     - PERCEPTION
     """
 
-    def __init__(self, statsl: list[int, int, int, int, int, int] = None):
+    PTS = 100
+
+    def __init__(self, statsl: list[int] = None):
+        assert len(statsl) == 7, "Needs 7 values to unpack"
+        assert sum(statsl) == self.PTS, f"Sum of the 7 values has to be equal to {self.PTS} : {sum(statsl)}"
 
         if statsl is None:
-            statsl = [0, 0, 0, 0, 0, 0]
+            statsl = [0, 0, 0, 0, 0, 0, 0]
 
         (self.intelligence,
+         self.strength,
          self.power,
          self.dexterity,
          self.constitution,
@@ -28,68 +34,73 @@ class CrystalStats:
 
     @property
     def list(self):
-        return [self.intelligence, self.power, self.dexterity, self.constitution, self.agility, self.perception]
+        return [self.intelligence, self.strength, self.power, self.dexterity, self.constitution, self.agility, self.perception]
 
-    def diff(self, other: 'CrystalStats') -> tuple[int]:
+    def diff(self, other: 'CrystalStats') -> tuple[float]:
         """
-        Returns the list of gaps between all stats of self and other.
+        Returns the list of similarity percentage between all stats of self and other.
 
         :param other: CrystalStats
-        :return: tuple[int], the list of gaps
+        :return: tuple[int], the list of percentage
         """
-        l1 = self.list
-        l2 = other.list
+        l1: list[int] = self.list
+        l2: list[int] = other.list
 
-        return tuple(l1[i] - l2[i] for i in range(len(l1)))
+        res = ()
+        for i in range(len(l1)):
+            gap = l1[i] - l2[i]
+            if gap < 0:
+                res += (l1[i] * 100 / l2[i],)
+            else:
+                res += (l2[i] / l1[i] * 100,)
+
+        return res
 
     def diff_value(self, other: 'CrystalStats') -> float:
         """
-        Returns the difference value between self and other.
-        It's calculated with the list of gaps between all stats.
+        Returns the similarity percentage between self and other.
 
         :param other: CrystalStats
-        :return: float, the diff value
+        :return: float, the similarity percentage
         """
         gaps_list = self.diff(other)
 
         res = 0
         for gap in gaps_list:
-            close_bonus = -5 / (abs(gap) ** 0.9 + 1)
-            res += abs(gap) + close_bonus
+            res += gap
 
-        return res
+        return res / 7
 
     def __repr__(self):
-        return f"INT: {self.intelligence}\nPOW: {self.power}\nDEX: {self.dexterity}\nCONST: {self.constitution}\nAGI: {self.agility}\nPER: {self.perception}"
-
+        return f"CrystalStats({str(self.list)})"
 
 def random_stats() -> CrystalStats:
     """
     Returns a randomly selected CrystalStats object.
     :return: CrystalStats
     """
-    rlist = [0] * 6
-    for _ in range(50):
-        i = random.randint(0, 5)
+    rlist = [0] * 7
+    for _ in range(CrystalStats.PTS):
+        i = random.randint(0, 6)
         rlist[i] += 1
 
     return CrystalStats(rlist)
 
 
-# 50 points: INT, POWER, DEX, CONST, AGI, PERCEP
-KNIGHT = CrystalStats((4, 10, 13, 13, 6, 4))
-SORCERER = CrystalStats((10, 15, 5, 5, 6, 9))
-ARCHER = CrystalStats((6, 9, 9, 5, 15, 6))
+# 50 points: INT, STRENGTH, POWER, DEX, CONST, AGI, PERCEP
+KNIGHT = CrystalStats([8, 26, 8, 14, 26, 10, 8])
+SORCERER = CrystalStats([16, 4, 32, 8, 14, 8, 18])
+ARCHER = CrystalStats([12, 10, 8, 16, 8, 26, 20])
 
 
 if __name__ == '__main__':
-    s1 = CrystalStats([20, 12, 34, 7, 1, 0])
+    '''s1 = CrystalStats([20, 12, 34, 7, 1, 0])
     s2 = CrystalStats([26, 10, 28, 10, 5, 20])
     s3 = CrystalStats([22, 10, 32, 9, 20, 20])
 
     print(s1.diff(s2))
     s1.diff_value(s2)
-    s1.diff_value(s3)
+    s1.diff_value(s3)'''
 
     r = random_stats()
     print(r)
@@ -97,7 +108,7 @@ if __name__ == '__main__':
     types = (KNIGHT, SORCERER, ARCHER)
     l = [r.diff_value(t) for t in types]
 
-    mini = min(l)
+    mini = max(l)
     print(l.index(mini))
     print(l)
 
