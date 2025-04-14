@@ -14,10 +14,10 @@ class Hour:
 
     @__init__.register
     def _from_str(self, hour: str):
-        self.hours, self.minutes = map(int, hour.split(" "))
+        hours, minutes = map(int, hour.split(" "))
 
-        self.hours = self.hours % 24
-        self.minutes = self.minutes % 60
+        self.hours = hours % 24
+        self.minutes = minutes % 60
 
     def is_between(self, other1, other2):
         if other1 == other2:
@@ -93,7 +93,7 @@ class Time:
     Classe qui gère le temps dans le jeu
     """
 
-    TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO nanosecondes en temps réel.
+    TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO secondes en temps réel.
 
     def __init__(self):
         self.clock = Clock(self)
@@ -239,3 +239,9 @@ if __name__ == '__main__':
         h1, h2 = Hour(user_input[0]), Hour(user_input[1])
         hour = random_hour(h1, h2)
         print(hour, round_to_quarter(hour))'''
+
+    h1 = Hour("00 00")
+    h2 = Hour("24 00")
+
+    print(h1 == h2)
+    

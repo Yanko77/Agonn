@@ -39,7 +39,7 @@ class NamedPlace:
 
         :param road: Road
         """
-        self.roads.append(road)
+        self.roads.add(road)
 
 
 class Town(NamedPlace):
@@ -77,7 +77,7 @@ class District:
 
         self.name = name
 
-        self.places_type_pool = self.init_places_type_pool()
+        self._places_type_pool = self.init_places_type_pool()
 
         self.sites = sites
 
@@ -136,13 +136,13 @@ class District:
 
     def _split_pools(self) -> tuple[list[dict], list[dict]]:
         """
-        Splits the places type pool into 2 differents pools:
+        Splits the places type pool into 2 different pools:
         - a necessary pool : it contains all necessary places. Those places will be placed first
         - another pool : it contains all the other places.
 
         :returns: tuple[list[dict], list[dict]]
         """
-        pool = self.places_type_pool
+        pool = self._places_type_pool
 
         necessary_pool = list()
         other_pool = list()

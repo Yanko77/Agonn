@@ -7,7 +7,7 @@ import src.config as config
 class _Set:
     """
     This class is a ``set`` implementation of which it's possible to get a random element, remove an element
-    and do ``.__countains__()`` with a complexity of O(1).
+    and do ``.__contains__()`` with a complexity of O(1).
     """
     def __init__(self, data: list):
         self.data = data
@@ -78,7 +78,12 @@ class _GridTile:
         _neighbors = {(self.y-1, self.x),
                       (self.y+1, self.x),
                       (self.y, self.x-1),
-                      (self.y, self.x+1)}
+                      (self.y, self.x+1),
+                      #(self.y-1, self.x-1),
+                      #(self.y-1, self.x+1),
+                      #(self.y+1, self.x-1),
+                      #(self.y+1, self.x+1)
+                      }
         return _Set([neigh for neigh in _neighbors if _is_in(neigh[1], neigh[0], config.MAP_SIZE)])
 
     def spread(self, grid):
@@ -101,7 +106,7 @@ class _GridTile:
                 incr = round(self.spr / 10)
                 neigh.incr_spr(incr)
 
-            elif neigh.spr == 100:
+            else:
                 _to_remove.add(neigh_pos)
 
         for neigh_pos in _to_remove:
@@ -180,7 +185,7 @@ def spawn_all_biomes() -> tuple[tuple, dict[tuple[int, int], _GridTile]]:
     The complexity of this algo is excellent.
 
     :returns: tuple[tuple, dict[tuple[int, int], tuple[Biome, int]]], the biomes list and the grid.
-        The grid is a dict that countains all the not empty tiles.
+        The grid is a dict that contains all the not empty tiles.
     """
     all_biomes = ()
     grid = dict()
