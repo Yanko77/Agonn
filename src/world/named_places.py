@@ -420,6 +420,8 @@ def sort_by_sites_amount(type_pool: list[dict]):
     return new_list
 
 
+TOWNS_NAME = ('Hanovre',)
+
 if __name__ == '__main__':
     from tests.tests_named_places import exec_tests
     exec_tests()
