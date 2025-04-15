@@ -208,11 +208,13 @@ class Place:
                  name: str):
         self.game = game
 
-        # Nom du type d'endroit
         self.name = name
 
-        # Image du type d'endroit
         self.images_directory = f'../assets/world/places/{name}/'
+
+        _open_hours_infos = get_place_hours(self.name)
+        self.open_hrs = _open_hours_infos[0]
+        self.is_always_open = _open_hours_infos[1]
 
 
 class Shop(Place):
@@ -352,20 +354,6 @@ class Inn(Place):
                          name='Inn')
 
 
-# TODO: Tavern (Taverne) X
-#       Church (Eglise) X
-#       TownHall (Hotel de ville) X
-#       Arena (Arene) X
-#       MarketPlace (Place du marché) X
-#       FoodShop (Magasin : Nourriture) X
-#       BlacksmithShop (Magasin : Forgeron) X
-#       ArmourerShop (Magasin : Armurier) X
-#       EnchantingShop (Magasin : Enchanteur) X
-#       WeaponShop (Magasin : Vendeur d'armes) X
-#       EquipmentShop (Magasin : Vendeur d'armures) X
-#       Inn (Auberge) X
-
-
 def get_district_places_type_pool(name: str) -> dict[str: dict]:
     """
     Returns the places types dict of the district.
@@ -378,29 +366,41 @@ def get_district_places_type_pool(name: str) -> dict[str: dict]:
         return json.load(file)[name]['pool']
 
 
-def get_place_hours(name: str) -> list[tuple[Hour]]:
+def get_place_hours(name: str) -> tuple[list[tuple[tuple[Hour]]], bool]:
     """
-    Returns the place open hour ranges.
+    Returns the place open hour ranges and the always open bool value of the place ``name``.
+
+    :return: tuple
     """
 
     with open('places.json', 'r') as file:
-        hrs_dicts_list = json.load(file)[name]['hrs']
+        file_content = json.load(file)[name]
 
-        res = []
-        for hrs_dict in hrs_dicts_list:
+        # Always open bool
+        bool_always_open = file_content['always_open']
 
-            words = ('open', 'close')
+        # Hours range
+        if bool_always_open:
+            hrs_range_list = None
+        else:
 
-            open_range = tuple()
-            for w in words:
-                if type(hrs_dict[w]) is list:
-                    open_range += (tuple(Hour(h) for h in hrs_dict[w]),)
-                else:
-                    open_range += (Hour(hrs_dict[w]),)
+            hrs_dicts_list = file_content['hrs']
 
-            res.append(open_range)
+            hrs_range_list = []
+            for hrs_dict in hrs_dicts_list:
 
-        return res
+                words = ('open', 'close')
+
+                open_range = tuple()
+                for w in words:
+                    if type(hrs_dict[w]) is list:
+                        open_range += (tuple(Hour(h) for h in hrs_dict[w]),)
+                    else:
+                        open_range += (Hour(hrs_dict[w]),)
+
+                hrs_range_list.append(open_range)
+
+        return hrs_range_list, bool_always_open
 
 
 def sort_by_sites_amount(type_pool: list[dict]):
@@ -423,7 +423,3 @@ def sort_by_sites_amount(type_pool: list[dict]):
 if __name__ == '__main__':
     from tests.tests_named_places import exec_tests
     exec_tests()
-
-    get_place_hours('TownHall')
-    get_place_hours('Inn')
-    get_place_hours('ArmourerShop')

@@ -1,5 +1,5 @@
 {
-  "FoodShop": {
+  "Food Shop": {
     "always_open": false,
     "hrs": [
       {
@@ -24,7 +24,7 @@
       }
     ]
   },
-  "BlacksmithShop": {
+  "Blacksmith Shop": {
     "always_open": false,
     "hrs": [
       {
@@ -59,7 +59,7 @@
       }
     ]
   },
-  "MarketPlace": {
+  "Market Place": {
     "always_open": false,
     "hrs": [
       {
@@ -68,7 +68,7 @@
       }
     ]
   },
-  "ArmourerShop": {
+  "Armourer Shop": {
     "always_open": false,
     "hrs": [
       {
@@ -81,7 +81,7 @@
       }
     ]
   },
-  "EnchantingShop": {
+  "Enchanting Shop": {
     "always_open": false,
     "hrs": [
       {
@@ -90,7 +90,7 @@
       }
     ]
   },
-  "WeaponShop": {
+  "Weapon Shop": {
     "always_open": false,
     "hrs": [
       {
@@ -103,7 +103,7 @@
       }
     ]
   },
-  "EquipmentShop": {
+  "Equipment Shop": {
     "always_open": false,
     "hrs": [
       {
