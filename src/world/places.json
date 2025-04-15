@@ -1,0 +1,128 @@
+{
+  "FoodShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["6:30", "8:0"],
+        "close": ["20:0", "22:0"]
+      }
+    ]
+  },
+  "Tavern": {
+    "always_open": true
+  },
+  "Church": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["9:0", "10:0"],
+        "close": "12:00"
+      },
+      {
+        "open": ["14:0", "15:0"],
+        "close": ["17:0", "19:0"]
+      }
+    ]
+  },
+  "BlacksmithShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["6:0", "7:30"],
+        "close": ["11:0","12:0"]
+      },
+      {
+        "open": ["12:30", "13:30"],
+        "close": "18:00"
+      }
+    ]
+  },
+  "TownHall": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": "10:0",
+        "close": "12:0"
+      },
+      {
+        "open": "14:0",
+        "close": "17:0"
+      }
+    ]
+  },
+  "Arena": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["17:0", "18:0"],
+        "close": ["22:0", "0:0"]
+      }
+    ]
+  },
+  "MarketPlace": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["6:30", "7:0"],
+        "close": ["12:0", "13:0"]
+      }
+    ]
+  },
+  "ArmourerShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["9:0", "10:0"],
+        "close": ["12:0", "13:0"]
+      },
+      {
+        "open": ["13:00", "14:0"],
+        "close": ["15:00", "17:0"]
+      }
+    ]
+  },
+  "EnchantingShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["15:0", "16:0"],
+        "close": ["0:0", "2:30"]
+      }
+    ]
+  },
+  "WeaponShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["9:0", "10:0"],
+        "close": ["12:0", "13:0"]
+      },
+      {
+        "open": ["13:0", "14:0"],
+        "close": ["15:0", "17:0"]
+      }
+    ]
+  },
+  "EquipmentShop": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["8:0", "10:0"],
+        "close": ["11:0", "13:0"]
+      },
+      {
+        "open": ["12:00", "14:00"],
+        "close": ["17:00", "19:0"]
+      }
+    ]
+  },
+  "Inn": {
+    "always_open": false,
+    "hrs": [
+      {
+        "open": ["17:0", "18:0"],
+        "close": ["10:0", "12:0"]
+      }
+    ]
+  }
+}
