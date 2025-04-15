@@ -1,6 +1,5 @@
 
 
-
 class Player:
 
     def __init__(self, game):
@@ -9,19 +8,18 @@ class Player:
         self.stats = Stats(self, [0, 0, 0, 0, 0, 0, 0])
 
 
-
 class Stats:
 
     def __init__(self, player: Player, stats: list[int]):
         self.player = player
 
         (self.intelligence,
-        self.constitution,
-        self.strength,
-        self.power,
-        self.dexterity,
-        self.agility,
-        self.perception) = stats
+         self.constitution,
+         self.strength,
+         self.power,
+         self.dexterity,
+         self.agility,
+         self.perception) = stats
 
         self.biology = 0.7*self.intelligence + 0.2*self.constitution + 0.1*self.perception
         self.strategy = 0.6*self.intelligence + 0.2*max(self.power, self.strength) + 0.2*self.constitution

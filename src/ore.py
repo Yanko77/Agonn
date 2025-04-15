@@ -74,6 +74,7 @@ class CrystalStats:
     def __repr__(self):
         return f"CrystalStats({str(self.list)})"
 
+
 def random_stats() -> CrystalStats:
     """
     Returns a randomly selected CrystalStats object.

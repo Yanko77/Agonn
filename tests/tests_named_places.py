@@ -13,7 +13,9 @@ def test_district_init_places():
     SITES = (
         [Site('', (FoodShop, BlacksmithShop, EnchantingShop, EquipmentShop, WeaponShop, ArmourerShop), i) for i in range(6)],
         [Site('', (Inn, Tavern), i) for i in range(6)],
-        [Site('', (MarketPlace,), 0), Site('', (Arena,), 1), Site('', (TownHall,), 2), Site('', (Church,), 3)] + [Site('', (FoodShop, BlacksmithShop, ArmourerShop, EnchantingShop, WeaponShop, EquipmentShop), i) for i in range(4, 6)],
+        [Site('', (MarketPlace,), 0), Site('', (Arena,), 1),
+            Site('', (TownHall,), 2), Site('', (Church,), 3)]
+            + [Site('', (FoodShop, BlacksmithShop, ArmourerShop, EnchantingShop, WeaponShop, EquipmentShop), i) for i in range(4, 6)],
         []  # TODO BadDistrict
     )
 
