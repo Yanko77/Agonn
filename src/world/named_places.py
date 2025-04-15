@@ -1,12 +1,9 @@
 import pygame
 import random
 import json
-import pprint
 
 from src.game import Game
-from src import mytime
-
-H = mytime.Hour
+from src.mytime import Hour
 
 NECESSARY = -1
 ANY = -2
@@ -206,13 +203,6 @@ class Place:
     All place types inherit from
     """
 
-    OPENING_HOURS_RANGES = (
-        (
-            (H("00 00"), H("00 00")),
-            (H("24 00"), H("24 00"))
-        ),
-    )
-
     def __init__(self,
                  game: Game,
                  name: str):
@@ -223,37 +213,6 @@ class Place:
 
         # Image du type d'endroit
         self.images_directory = f'../assets/world/places/{name}/'
-
-        # Horaires d'ouverture. Tuple : ((h1, h2), (h3, h4), ...). Est ouvert entre h1 et h2, entre h3 et h4, etc
-        self.opening_hours = self.init_opening_hours()
-
-    @property
-    def is_open(self):
-        for opening_hour, closing_hour in self.opening_hours:
-            if self.game.time.hour.is_between(opening_hour, closing_hour):
-                return True
-        return False
-
-    def init_opening_hours(self) -> tuple:
-
-        opening_hour_tuple = ()
-
-        for hours_range in self.OPENING_HOURS_RANGES:
-            opening_hour_min, opening_hour_max = hours_range[0]
-            closing_hour_min, closing_hour_max = hours_range[1]
-
-            opening_hour = mytime.random_hour(opening_hour_min, opening_hour_max)
-            closing_hour = mytime.random_hour(closing_hour_min, closing_hour_max)
-
-            opening_hour = mytime.round_to_quarter(opening_hour)
-            closing_hour = mytime.round_to_quarter(closing_hour)
-
-            opening_hour_tuple += ((
-                                       opening_hour,
-                                       closing_hour
-                                   ),)
-
-        return opening_hour_tuple
 
 
 class Shop(Place):
@@ -310,9 +269,6 @@ class BadDistrict(District):
 
 
 class FoodShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("06 30"), H("08 00")), (H("20 00"), H("22 00"))),
-    )
 
     def __init__(self,
                  game):
@@ -321,12 +277,6 @@ class FoodShop(Shop):
 
 
 class Tavern(Place):
-    OPENING_HOURS_RANGES = (
-        (
-            (H("00 00"), H("00 00")),
-            (H("24 00"), H("24 00"))
-        ),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -334,16 +284,6 @@ class Tavern(Place):
 
 
 class Church(Place):
-    OPENING_HOURS_RANGES = (
-        (
-            (H("09 00"), H("10 00")),
-            (H("12 00"), H("12 00"))
-        ),
-        (
-            (H("14 00"), H("15 00")),
-            (H("17 00"), H("19 00"))
-        )
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -351,21 +291,12 @@ class Church(Place):
 
 
 class BlacksmithShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("06 00"), H("07 30")), (H("11 00"), H("12 00"))),
-        ((H("12 30"), H("13 30")), (H("18 00"), H("18 00")))
-    )
-
     def __init__(self, game):
         super().__init__(game=game,
                          name='Blacksmith Shop')
 
 
 class TownHall(Place):
-    OPENING_HOURS_RANGES = (
-        ((H("10 00"), H("10 00")), (H("12 00"), H("12 00"))),
-        ((H("14 00"), H("14 00")), (H("17 00"), H("17 00")))
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -373,10 +304,6 @@ class TownHall(Place):
 
 
 class Arena(Place):
-    OPENING_HOURS_RANGES = (
-        ((H("17 00"), H("18 00")), (H("22 00"), H("24 00"))),
-    )
-
     def __init__(self,
                  game):
         super().__init__(game=game,
@@ -384,9 +311,6 @@ class Arena(Place):
 
 
 class MarketPlace(Place):
-    OPENING_HOURS_RANGES = (
-        ((H("06 30"), H("07 00")), (H("12 00"), H("13 00"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -394,10 +318,6 @@ class MarketPlace(Place):
 
 
 class ArmourerShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
-        ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -405,9 +325,6 @@ class ArmourerShop(Shop):
 
 
 class EnchantingShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("15 00"), H("16 00")), (H("00 00"), H("02 30"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -415,10 +332,6 @@ class EnchantingShop(Shop):
 
 
 class WeaponShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("09 00"), H("10 00")), (H("12 00"), H("13 00"))),
-        ((H("13 00"), H("14 00")), (H("15 00"), H("17 00"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -426,10 +339,6 @@ class WeaponShop(Shop):
 
 
 class EquipmentShop(Shop):
-    OPENING_HOURS_RANGES = (
-        ((H("08 00"), H("10 00")), (H("11 00"), H("13 00"))),
-        ((H("12 00"), H("14 00")), (H("17 00"), H("19 00"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -437,9 +346,6 @@ class EquipmentShop(Shop):
 
 
 class Inn(Place):
-    OPENING_HOURS_RANGES = (
-        ((H("17 00"), H("18 00")), (H("10 00"), H("12 00"))),
-    )
 
     def __init__(self, game):
         super().__init__(game=game,
@@ -472,6 +378,31 @@ def get_district_places_type_pool(name: str) -> dict[str: dict]:
         return json.load(file)[name]['pool']
 
 
+def get_place_hours(name: str) -> list[tuple[Hour]]:
+    """
+    Returns the place open hour ranges.
+    """
+
+    with open('places.json', 'r') as file:
+        hrs_dicts_list = json.load(file)[name]['hrs']
+
+        res = []
+        for hrs_dict in hrs_dicts_list:
+
+            words = ('open', 'close')
+
+            open_range = tuple()
+            for w in words:
+                if type(hrs_dict[w]) is list:
+                    open_range += (tuple(Hour(h) for h in hrs_dict[w]),)
+                else:
+                    open_range += (Hour(hrs_dict[w]),)
+
+            res.append(open_range)
+
+        return res
+
+
 def sort_by_sites_amount(type_pool: list[dict]):
     """
     Sorts the place type list by amount of sites (ascending order)
@@ -492,3 +423,7 @@ def sort_by_sites_amount(type_pool: list[dict]):
 if __name__ == '__main__':
     from tests.tests_named_places import exec_tests
     exec_tests()
+
+    get_place_hours('TownHall')
+    get_place_hours('Inn')
+    get_place_hours('ArmourerShop')

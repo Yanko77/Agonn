@@ -14,7 +14,7 @@ class Hour:
 
     @__init__.register
     def _from_str(self, hour: str):
-        hours, minutes = map(int, hour.split(" "))
+        hours, minutes = map(int, hour.split(":"))
 
         self.hours = hours % 24
         self.minutes = minutes % 60
@@ -47,6 +47,9 @@ class Hour:
             raise TypeError('Can only compare two Hour objects')
 
         return self == other or self < other
+
+    def __repr__(self):
+        return f'{self.hours}:{self.minutes}'
 
 
 class Date:
@@ -90,7 +93,7 @@ class Date:
 
 class Time:
     """
-    Classe qui gère le temps dans le jeu
+    Manages game time.
     """
 
     TIME_RATIO = 60  # 1h in-game correspond à TIME_RATIO secondes en temps réel.
@@ -109,14 +112,16 @@ class Time:
     @property
     def day(self) -> int:
         """
-        Renvoie le jour de jeu courant.
+        Returns the current day
         """
         return self.get() // (self.TIME_RATIO * 24)
 
     @property
     def hour(self) -> Hour:
         """
-        Renvoie l'heure de jeu courante sous la forme d'un objet Hour.
+        Returns the current hour.
+
+        :returns: Hour object
         """
 
         current_day_time_value = self.get() - self.day * self.TIME_RATIO * 24
@@ -129,6 +134,11 @@ class Time:
 
     @property
     def now(self) -> Date:
+        """
+        Returns the current date
+
+        :returns: Date object
+        """
         return Date(self.day, self.hour)
 
 
@@ -145,11 +155,15 @@ class Clock:
 
     @property
     def elapsed_time(self) -> int:
-        """ Renvoie le temps réel en nanosecondes écoulé depuis le début du jeu. """
+        """
+        Returns the real elapsed time in ns since the start of the game
+        """
         return time.perf_counter_ns() - self.initial_time
 
     def tick(self):
-        """ Met à jour l'horloge """
+        """
+        Updates the clock
+        """
 
         # On récupère la valeur de temps écoulé de l'itération de boucle du jeu précédente.
         elapsed_time = self.elapsed_time
@@ -203,9 +217,11 @@ def random_hour(hour1: Hour, hour2: Hour) -> Hour:
     return Hour(hours_digit, minutes_digit)
 
 
-def round_to_quarter(hour: Hour):
+def round_to_quarter(hour: Hour) -> Hour:
     """
-    Arrondit une heure au quart d'heure le plus proche.
+    Rounds an Hour object to the nearest quarter-hour.
+
+    :returns: Hour object
     """
 
     quarter = 0
