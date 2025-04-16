@@ -26,7 +26,10 @@ PLACES = (Inn, EquipmentShop, WeaponShop, EnchantingShop,  ArmourerShop, MarketP
 def test_district_init_places():
 
     for i in range(len(DISTRICTS)):
-        district = DISTRICTS[i](game='game', sites=SITES[i])
+        district = DISTRICTS[i](game='game')
+        for site in SITES[i]:
+            district.add_site(site)
+
         district.init_places()
 
         nec_places = district._split_pools()[0]

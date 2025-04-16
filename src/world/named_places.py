@@ -58,7 +58,47 @@ class Town(NamedPlace):
                          name=name,
                          tile=tile)
 
-        self.districts = set()  # Town districts list : Centre-ville, Quartier commercial, Résidentiel
+        self.districts = list()  # Town districts list : Centre-ville, Quartier commercial, Résidentiel
+        self.init_districts()
+
+    def init_districts(self):
+        """
+        Initialize all the districts:
+        - add them to ``self.districts``
+        - initialize all their sites
+        - initialize all their places
+        """
+        districts_infos = get_town_district_sites(self.name)
+
+        for district_name in districts_infos:
+            self.districts.append(
+                globals()[district_name](game=self.game)
+            )
+
+        self._init_district_sites(districts_infos)
+
+        self._init_district_places()
+
+    def _init_district_sites(self, districts_infos) -> None:
+        """
+        Initialize the sites of all the districts.
+
+        Effect: add the site list to each district
+        """
+        for district in self.districts:
+            infos = districts_infos[district.__class__.__name__]['sites']
+            for site_dict in infos:
+                site_obj = Site(game=self.game,
+                                place_types=[globals()[place_cls_name] for place_cls_name in site_dict["places_types"]],
+                                rect=pygame.Rect(site_dict["rect"]))
+                district.add_site(site_obj)
+
+    def _init_district_places(self):
+        """
+        Initialize all the districts places
+        """
+        for district in self.districts:
+            district.init_places()
 
 
 class District:
@@ -68,15 +108,17 @@ class District:
 
     def __init__(self,
                  game: Game,
-                 name: str,
-                 sites: list):
+                 name: str):
         self.game = game
 
         self.name = name
 
         self._places_type_pool = self.init_places_type_pool()
 
-        self.sites = sites
+        self.sites = list()
+
+    def add_site(self, site: 'Site'):
+        self.sites.append(site)
 
     def init_places_type_pool(self) -> dict['Place', dict]:
         """
@@ -234,40 +276,32 @@ class Shop(Place):
 class DownTown(District):
 
     def __init__(self,
-                 game: Game,
-                 sites: list):
+                 game: Game):
         super().__init__(game=game,
-                         name='Downtown',
-                         sites=sites)
+                         name='Downtown')
 
 
 class CommercialDistrict(District):
     def __init__(self,
-                 game: Game,
-                 sites: list):
+                 game: Game):
         super().__init__(game=game,
-                         name='Commercial district',
-                         sites=sites)
+                         name='Commercial district')
 
 
 class ResidentialDistrict(District):
 
     def __init__(self,
-                 game: Game,
-                 sites: list):
+                 game: Game):
         super().__init__(game=game,
-                         name='Residential district',
-                         sites=sites)
+                         name='Residential district')
 
 
 class BadDistrict(District):
 
     def __init__(self,
-                 game: Game,
-                 sites: list):
+                 game: Game):
         super().__init__(game=game,
-                         name='Bad district',
-                         sites=sites)
+                         name='Bad district')
 
 
 class FoodShop(Shop):
@@ -366,11 +400,23 @@ def get_district_places_type_pool(name: str) -> dict[str: dict]:
         return json.load(file)[name]['pool']
 
 
+def get_town_district_sites(name: str) -> list[dict[str, list]]:
+    """
+    Returns the list of dict which contains the site infos.
+
+    :returns: list[dict[str, list]]
+    """
+    with open('towns.json', 'r') as file:
+        file_content = json.load(file)[name]
+
+        return file_content
+
+
 def get_place_hours(name: str) -> tuple[list[tuple[tuple[Hour]]], bool]:
     """
     Returns the place open hour ranges and the always open bool value of the place ``name``.
 
-    :return: tuple
+    :returns: tuple
     """
 
     with open('places.json', 'r') as file:
@@ -425,3 +471,14 @@ TOWNS_NAME = ('Hanovre',)
 if __name__ == '__main__':
     from tests.tests_named_places import exec_tests
     exec_tests()
+
+    HANOVRE = Town(game='game',
+                   name='Hanovre',
+                   tile='')
+
+    print(HANOVRE.name)
+    print(HANOVRE.districts)
+    downtown = HANOVRE.districts[0]
+
+    print(downtown.sites)
+
