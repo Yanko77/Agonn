@@ -5,7 +5,7 @@ from typing import assert_type
 
 from src.world.named_places import CommercialDistrict, ResidentialDistrict, DownTown, BadDistrict, FoodShop, \
     BlacksmithShop, EnchantingShop, EquipmentShop, WeaponShop, ArmourerShop, MarketPlace, Arena, TownHall, Inn, \
-    Tavern, Site, Church, NECESSARY
+    Tavern, Site, Church, NECESSARY, Town
 
 from src.mytime import Hour
 
@@ -21,6 +21,21 @@ SITES = (
     )
 PLACES = (Inn, EquipmentShop, WeaponShop, EnchantingShop,  ArmourerShop, MarketPlace, Arena, TownHall, BlacksmithShop,
           Church, Tavern, FoodShop)
+
+
+def test_town_districts_init():
+    hanovre = Town(game='game',
+                   name='Hanovre',
+                   tile=())
+
+    assert hanovre.name == 'Hanovre'
+    assert hanovre.districts != list()
+
+    for district in hanovre.districts:
+        assert district.sites != list()
+
+        for site in district.sites:
+            assert site.place.__class__ in site.place_types
 
 
 def test_district_init_places():
@@ -63,5 +78,6 @@ def test_place_init_hrs():
 def exec_tests():
     test_district_init_places()
     test_place_init_hrs()
+    test_town_districts_init()
 
     print('TESTS OK')

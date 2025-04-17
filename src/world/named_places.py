@@ -58,17 +58,17 @@ class Town(NamedPlace):
                          name=name,
                          tile=tile)
 
-        self.districts = list()  # Town districts list : Centre-ville, Quartier commercial, Résidentiel
+        self.districts: list[District] = list()  # Town districts list : Centre-ville, Quartier commercial, Résidentiel
         self.init_districts()
 
     def init_districts(self):
         """
-        Initialize all the districts:
-        - add them to ``self.districts``
-        - initialize all their sites
-        - initialize all their places
+        Initializes all the districts:
+        - adds them to ``self.districts``
+        - initializes all their sites
+        - initializes all their places
         """
-        districts_infos = get_town_district_sites(self.name)
+        districts_infos = load_town_district_sites(self.name)
 
         for district_name in districts_infos:
             self.districts.append(
@@ -79,14 +79,17 @@ class Town(NamedPlace):
 
         self._init_district_places()
 
-    def _init_district_sites(self, districts_infos) -> None:
+    def _init_district_sites(self, districts_infos: dict[str, dict[str, list]]) -> None:
         """
-        Initialize the sites of all the districts.
+        Initializes the sites of all the districts.
 
         Effect: add the site list to each district
+
+        :param districts_infos: dict[str, dict[str, list]], the loaded district sites infos
         """
         for district in self.districts:
             infos = districts_infos[district.__class__.__name__]['sites']
+
             for site_dict in infos:
                 site_obj = Site(game=self.game,
                                 place_types=[globals()[place_cls_name] for place_cls_name in site_dict["places_types"]],
@@ -138,7 +141,7 @@ class District:
 
     def init_places(self):
         """
-        Initialize all district places by determining their location (site).
+        Initializes all district places by determining their location (site).
         """
         # Split the pool
         necessary_pool, other_pool = self._split_pools()
@@ -177,7 +180,7 @@ class District:
         - a necessary pool : it contains all necessary places. Those places will be placed first
         - another pool : it contains all the other places.
 
-        :returns: tuple[list[dict], list[dict]]
+        :returns: tuple[list['Place'], dict['Place', int]]
         """
 
         pool = self._places_type_pool
@@ -402,7 +405,7 @@ def get_district_places_type_pool(name: str) -> dict[str: dict]:
         return json.load(file)[name]['pool']
 
 
-def get_town_district_sites(name: str) -> list[dict[str, list]]:
+def load_town_district_sites(name: str) -> list[dict[str, list]]:
     """
     Returns the list of dict which contains the site infos.
 
@@ -449,23 +452,6 @@ def get_place_hours(name: str) -> tuple[list[tuple[tuple[Hour]]], bool]:
                 hrs_range_list.append(open_range)
 
         return hrs_range_list, bool_always_open
-
-
-def sort_place_by_sites_amount(type_pool: list[dict]):
-    """
-    Sorts the place type list by amount of sites (ascending order)
-    """
-
-    new_list = []
-    while len(type_pool) > 0:
-        mini_i = 0
-        for i in range(len(type_pool) - 1):
-            if len(type_pool[i + 1]['sites']) < len(type_pool[mini_i]['sites']):
-                mini_i = i + 1
-        new_list.append(type_pool[mini_i])
-        type_pool.pop(mini_i)
-        
-    return new_list
 
 
 def is_site_necessary(site: Site, district_pool_infos: dict[Place, dict]):
