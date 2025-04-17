@@ -43,7 +43,7 @@ def test_district_init_places():
 
         # test if all necessary places are in the district
         for nec_place in nec_places:
-            assert nec_place['type'] in sites_place_type, f"{sites_place_type} {nec_place}"
+            assert nec_place in sites_place_type, f"{sites_place_type} {nec_place}"
 
 
 def test_place_init_hrs():

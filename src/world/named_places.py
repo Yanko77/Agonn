@@ -140,40 +140,38 @@ class District:
         """
         Initialize all district places by determining their location (site).
         """
-
-        # Shuffle all the sites
-        random.shuffle(self.sites)
-
         # Split the pool
         necessary_pool, other_pool = self._split_pools()
 
-        # Sort the necessary pool by available sites amount
-        necessary_pool = sort_by_sites_amount(necessary_pool)
+        # Sort the sites list (Necessary first)
+        self.sites = sort_sites(self.sites, self._places_type_pool)
 
-        # Choose the location of the necessary
-        for place_infos in necessary_pool:
-            place = place_infos['type'](self.game)
-            sites = place_infos['sites']
+        for site in self.sites:
 
-            for site in sites:
-                if site.is_empty:
-                    site.set_place(place)
-                    break
+            # Try to put a necessary place
+            nec_compatible_list = [placetype for placetype in necessary_pool if site.is_place_type_correct(placetype)]
+            if nec_compatible_list:
+                chosen_nec_place = random.choice(nec_compatible_list)
 
-        # Choose the location of the other
-        empty_sites = [site for site in self.sites if site.is_empty]
+                necessary_pool.remove(chosen_nec_place)
 
-        for site in empty_sites:
-            compatibles_places = [placetype for placetype in other_pool
-                                  if site.is_place_type_correct(placetype['type']) and placetype['amount'] != 0]
+                site.set_place(chosen_nec_place(self.game))
 
-            picked_place = random.choice(compatibles_places)
-            site.set_place(picked_place['type'](self.game))
+            # Else put another place
+            else:
+                other_compatible_list = {placetype: other_pool[placetype] for placetype in other_pool.keys()
+                                         if site.is_place_type_correct(placetype)}
 
-            if picked_place['amount'] != ANY:
-                picked_place['amount'] -= 1
+                chosen_other_place = random.choice(tuple(other_compatible_list.keys()))
 
-    def _split_pools(self) -> tuple[list[dict], list[dict]]:
+                if other_compatible_list[chosen_other_place] == 1:
+                    del other_compatible_list[chosen_other_place]
+                elif other_compatible_list[chosen_other_place] != ANY:
+                    other_compatible_list[chosen_other_place] -= 1
+
+                site.set_place(chosen_other_place(self.game))
+
+    def _split_pools(self) -> tuple[list['Place'], dict['Place', int]]:
         """
         Splits the places type pool into 2 different pools:
         - a necessary pool : it contains all necessary places. Those places will be placed first
@@ -181,21 +179,21 @@ class District:
 
         :returns: tuple[list[dict], list[dict]]
         """
+
         pool = self._places_type_pool
 
         necessary_pool = list()
-        other_pool = list()
+        other_pool = dict()
 
         for place in pool.keys():
             if NECESSARY in pool[place]['tags']:
-                necessary_pool.append({'type': place,
-                                       'sites': [site for site in self.sites if site.is_place_type_correct(place)]})
+                necessary_pool.append(place)
 
-                pool[place]['amount'] -= 1
+                if pool[place]['amount'] != ANY:
+                    pool[place]['amount'] -= 1
 
             if pool[place]['amount'] > 0 or pool[place]['amount'] == ANY:
-                other_pool.append({'type': place,
-                                   'amount': pool[place]['amount']})
+                other_pool[place] = pool[place]['amount']
 
         return necessary_pool, other_pool
 
@@ -217,7 +215,7 @@ class Site:
         self.place = None
 
     def __repr__(self):
-        return f"Site({self.place.__class__.__name__})"
+        return f"Site({self.place.__class__.__name__}, {self.rect})"
 
     @property
     def is_empty(self):
@@ -236,6 +234,10 @@ class Site:
         :returns: bool
         """
         return place in self._place_types
+
+    @property
+    def place_types(self):
+        return self._place_types
 
 
 class Place:
@@ -449,7 +451,7 @@ def get_place_hours(name: str) -> tuple[list[tuple[tuple[Hour]]], bool]:
         return hrs_range_list, bool_always_open
 
 
-def sort_by_sites_amount(type_pool: list[dict]):
+def sort_place_by_sites_amount(type_pool: list[dict]):
     """
     Sorts the place type list by amount of sites (ascending order)
     """
@@ -462,8 +464,36 @@ def sort_by_sites_amount(type_pool: list[dict]):
                 mini_i = i + 1
         new_list.append(type_pool[mini_i])
         type_pool.pop(mini_i)
-
+        
     return new_list
+
+
+def is_site_necessary(site: Site, district_pool_infos: dict[Place, dict]):
+    """
+    Returns True if ``site._places_types`` only contains necessary place types.
+    """
+    return all([NECESSARY in district_pool_infos[place_cls]['tags'] for place_cls in site.place_types])
+
+
+def sort_sites(sites_list, district_pool_infos) -> list[Site]:
+    """
+    Sorts and returns the sites list:
+    - the necessary sites first (``is_site_necessary(site) is True``)
+    - Then the others
+    """
+
+    nec_part, other_part = [], []
+
+    for site in sites_list:
+        if is_site_necessary(site, district_pool_infos):
+            nec_part.append(site)
+        else:
+            other_part.append(site)
+
+    random.shuffle(nec_part)
+    random.shuffle(other_part)
+
+    return nec_part + other_part
 
 
 TOWNS_NAME = ('Hanovre',)
@@ -481,4 +511,3 @@ if __name__ == '__main__':
     downtown = HANOVRE.districts[0]
 
     print(downtown.sites)
-

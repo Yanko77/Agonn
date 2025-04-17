@@ -4,22 +4,22 @@
       "sites": [
         {
           "rect": [0, 0, 0, 0],
-          "places_types": ["Arena", "TownHall", "FoodShop"]
+          "places_types": ["Arena", "TownHall"]
         },
         {
-          "rect": [0, 0, 0, 0],
+          "rect": [1, 0, 0, 0],
           "places_types": ["MarketPlace"]
         },
         {
-          "rect": [0, 0, 0, 0],
+          "rect": [2, 0, 0, 0],
           "places_types": ["TownHall", "Arena", "ArmourerShop", "EquipmentShop", "WeaponShop", "BlacksmithShop", "FoodShop", "EnchantingShop"]
         },
         {
-          "rect": [0, 0, 0, 0],
+          "rect": [3, 0, 0, 0],
           "places_types": ["TownHall", "ArmourerShop", "EquipmentShop", "WeaponShop", "BlacksmithShop", "FoodShop", "EnchantingShop"]
         },
         {
-          "rect": [0, 0, 0, 0],
+          "rect": [4, 0, 0, 0],
           "places_types": ["Arena", "ArmourerShop", "EquipmentShop", "WeaponShop", "FoodShop", "BlacksmithShop", "EnchantingShop"]
         }
       ]
