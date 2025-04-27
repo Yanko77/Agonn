@@ -1,0 +1,8 @@
+{
+  "player": {
+    "knowledge": "10 + INT + (player.age - 20) // 2",
+    "agility": "10 + DEX - HEI // 3",
+    "accuracy": "10 + DEX // 3",
+    "perception": "10 + INT // 3"
+  }
+}

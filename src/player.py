@@ -1,9 +1,15 @@
+from stats import Stat
 
 
 class Player:
 
-    def __init__(self, game):
+    def __init__(self,
+                 game: 'Game',
+                 age: int = 20):
         self.game = game
+        self.name = 'player'
+
+        self.age = age
 
         self.stats = Stats(self, [0, 0, 0, 0, 0, 0, 0])
 
@@ -13,39 +19,57 @@ class Stats:
     def __init__(self, player: Player, stats: list[int]):
         self.player = player
 
-        (self.intelligence,
-         self.constitution,
-         self.strength,
-         self.power,
-         self.dexterity,
-         self.agility,
-         self.perception) = stats
+        (
+            self.STR,
+            self.DEX,
+            self.VIT,
+            self.CHA,
+            self.INT,
+            self.POW,
+            self.HEI
+        ) = stats
 
-        self.biology = 0.7*self.intelligence + 0.2*self.constitution + 0.1*self.perception
-        self.strategy = 0.6*self.intelligence + 0.2*max(self.power, self.strength) + 0.2*self.constitution
-        self.crystal_know = 0.8*self.intelligence + 0.2*self.power
+        self.knowledge = Stat(self.player, 'knowledge')
+        self.agility = Stat(self.player, 'agility')
+        self.accuracy = Stat(self.player, 'accuracy')
+        self.perception = Stat(self.player, 'perception')
 
-        self.jump = 0.7*self.agility + 0.2*self.constitution + 0.1*self.perception
-        self.climbing = 0.7*self.agility + 0.3*self.constitution
+        self.biology = ...
+        self.strategy = ...
+        self.crystal_know = ...
 
-        self.lock_picking = self.intelligence*0.4 + self.dexterity*0.6
-        self.traps = self.intelligence * 0.4 + self.strength*0.3 + self.dexterity*0.3
+        self.jump = ...
+        self.climbing = ...
 
-        self.martial_arts = self.dexterity*0.4 + self.strength*0.3 + self.agility*0.3
-        self.stealth = self.agility*0.8 + self.dexterity*0.3 - 0.1*self.constitution
-        self.dodging = self.agility*0.9 + self.dexterity*0.3 - self.constitution*0.2
-        self.draw_quickly = self.dexterity*0.8 + self.agility*0.1 + self.strength*0.1
+        self.lock_picking = ...
+        self.traps = ...
 
-        self.balance = self.constitution*0.5 + self.perception*0.5
-        self.listen = self.perception
-        self.smell = self.perception
-        self.see = self.perception
-        self.taste = self.perception
-        self.chase = self.perception
+        self.martial_arts = ...
+        self.stealth = ...
+        self.dodging = ...
+        self.draw_quickly = ...
 
-        self.trading = self.intelligence*0.6 + self.perception*0.2 + self.constitution*0.2
-        self.smooth_talk = self.intelligence*0.4 + self.power*0.2 + self.perception*0.2 + self.constitution*0.2
+        self.balance = ...
+        self.listen = ...
+        self.smell = ...
+        self.see = ...
+        self.taste = ...
+        self.chase = ...
+
+        self.trading = ...
+        self.smooth_talk = ...
+
+    def __getitem__(self, item):
+        local_vars = {}
+        code = f'res = {self.__getattribute__(item).formula}'
+        exec(code, locals(), local_vars)
+
+        return local_vars['res']
 
 
 if __name__ == '__main__':
     p = Player('a')
+
+    p.stats.INT = 15
+
+    print(p.stats['agility'])
