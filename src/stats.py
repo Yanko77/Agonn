@@ -1,23 +1,41 @@
 import json
 
+from varname import varname
+
 _ALLOWED_C = {'+', '-', '*', '/', '//', '%', ' ', '(', ')'}
 
 
 class Stat:
 
     def __init__(self,
-                 owner,
-                 name: str):
-        self.owner = owner
+                 manager: 'Stats'):
+        self.manager = manager
+        self.owner = manager.owner
 
-        self.name = name
+        self.name = _get_name()  # stat name = name of the variable the stat object got affected to
+
         self.formula = _parse(get_formula(self.name, self.owner.name))
-
         self.flat_bonus = 0
 
     @property
     def value(self):
-        return exec(self.formula)
+        """
+        Returns stat value.
+        """
+        res_dict = {}
+        code = f'res = {self.formula} + {self.flat_bonus}'
+        exec(code, self.manager.locals(), res_dict)
+
+        return res_dict['res']
+
+    def __add__(self, value: int):
+        """
+        Adds a bonus flat value.
+        """
+        assert type(value) is int, 'Stat object can only be added with int value'
+
+        self.flat_bonus += value
+        return self
 
 
 def _parse(formula: str = ''):
@@ -35,6 +53,18 @@ def _parse(formula: str = ''):
             word += c
 
     return res
+
+
+def _get_name() -> str:
+    """
+    Used in Stat class __init__ method to get its name.
+    Returns the stat name.
+
+    It uses varname with frame=2.
+
+    :return: str
+    """
+    return varname(2).lstrip('self.')
 
 
 def get_formula(stat_name: str, owner_name: str):
