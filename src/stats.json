@@ -21,9 +21,18 @@
     "criminology": "knowledge + perception // 2",
     "biology": "knowledge + smell // 2",
     "strategy": "INT + communication // 2 + knowledge // 2",
-    "crystal_knowledge": "knowledge + POW // 2",
+    "crystal_knowledge": "knowledge + POW // 3 + perception // 3",
 
-    "jump": "agility + flexibility // 2 + HEI // 2"
+    "jump": "agility // 2 + flexibility // 3.5 + HEI // 2",
+    "climbing": "agility // 1.75 + flexibility // 3.5 + HEI // 3 + VIT // 5",
+    "swimming": "agility // 1.75 + flexibility // 3 + VIT",
+    "acrobatics": "agility + flexibility",
+
+    "lock_picking": "accuracy + perception // 3 + CHA // 3",
+    "traps": "accuracy * 1.5 + perception // 3",
+
+    "martial_arts": "STR * 1.125 + DEX * 1.125 + VIT",
+    "stealth": "agility // 2 + DEX // 2 - HEI // 3 + flexibility // 2"
 
 
   }

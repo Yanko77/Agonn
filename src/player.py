@@ -78,6 +78,8 @@ class Stats:
 
         self.jump = Stat(self)
         self.climbing = Stat(self)
+        self.swimming = Stat(self)
+        self.acrobatics = Stat(self)
 
         self.lock_picking = Stat(self)
         self.traps = Stat(self)

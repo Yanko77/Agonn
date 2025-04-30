@@ -27,7 +27,7 @@ class Stat:
         Returns stat value.
         """
         res_dict = {}
-        code = f'res = {self.formula} + {self.flat_bonus}'
+        code = f'res = round({self.formula} + {self.flat_bonus})'
 
         exec(code, self.manager.locals(), res_dict)
         return res_dict['res']
