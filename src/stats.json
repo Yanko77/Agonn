@@ -1,8 +1,22 @@
 {
   "player": {
-    "knowledge": "10 + INT + (owner.age - 20) // 2",
-    "agility": "10 + DEX - HEI // 3",
-    "accuracy": "10 + DEX // 3",
-    "perception": "10 + INT // 3"
+    "age": "0",
+    "level": "0",
+
+    "STR": "10 + level",
+    "DEX": "10 + level",
+    "VIT": "10 + level",
+    "CHA": "10 + level",
+    "INT": "10 + level",
+    "POW": "10 + level",
+    "HEI": "10",
+
+    "knowledge": "10 + INT + (age - 20) // 2",
+    "agility": "10 + DEX * 4 // 3 - HEI // 3",
+    "accuracy": "10 + DEX",
+    "perception": "10 + INT // 2.5 + CHA // 2.5 + HEI // 5",
+    "communication": "10 + CHA",
+    "flexibility": "20 + DEX // 2 - HEI // 4 - VIT // 4"
+
   }
 }

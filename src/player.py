@@ -4,14 +4,31 @@ from stats import Stat
 class Player:
 
     def __init__(self,
-                 game: 'Game',
-                 age: int = 20):
+                 game: 'Game'):
         self.game = game
         self.name = 'player'
 
-        self.age = age
+        self.stats = Stats(self)
 
-        self.stats = Stats(self, [0, 0, 0, 0, 0, 0, 0])
+    def __getattr__(self, item):
+        """
+        If an attribute is not defined, then try to get it from the stats object.
+
+        Example:
+            >>> p = Player('game')
+            >>> try:
+            ...     p.__getattribute__('INT')
+            ... except AttributeError:
+            ...     print('Attribute error')
+            ... finally:
+            ...     print(p.INT == p.stats['INT'])
+            Attribute error
+            True
+        """
+        try:
+            return self.stats[item]
+        except KeyError:
+            raise AttributeError(f'Unknown attribute : {item}')
 
 
 class Stats:
@@ -35,25 +52,26 @@ class Stats:
             ```
     """
 
-    def __init__(self, owner: Player, stats: list[int]):
+    def __init__(self, owner: Player):
         self.owner = owner
 
-        (
-            self.STR,
-            self.DEX,
-            self.VIT,
-            self.CHA,
-            self.INT,
-            self.POW,
-            self.HEI
-        ) = stats
+        self.age = Stat(self)
+        self.level = Stat(self)
+
+        self.STR = Stat(self)
+        self.DEX = Stat(self)
+        self.VIT = Stat(self)
+        self.CHA = Stat(self)
+        self.INT = Stat(self)
+        self.POW = Stat(self)
+        self.HEI = Stat(self)
 
         self.knowledge = Stat(self)
         self.agility = Stat(self)
         self.accuracy = Stat(self)
         self.perception = Stat(self)
 
-        '''self.biology = Stat(self)
+        self.biology = Stat(self)
         self.strategy = Stat(self)
         self.crystal_know = Stat(self)
 
@@ -76,7 +94,7 @@ class Stats:
         self.chase = Stat(self)
 
         self.trading = Stat(self)
-        self.smooth_talk = Stat(self)'''
+        self.smooth_talk = Stat(self)
 
     def __getitem__(self, item):
         """

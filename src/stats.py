@@ -14,7 +14,11 @@ class Stat:
 
         self.name = _get_name()  # stat name = name of the variable the stat object got affected to
 
-        self.formula = _parse(get_formula(self.name, self.owner.name))
+        try:
+            self.formula = _parse(get_formula(self.name, self.owner.name))
+        except AssertionError:
+            self.formula = ""
+
         self.flat_bonus = 0
 
     @property
@@ -24,8 +28,8 @@ class Stat:
         """
         res_dict = {}
         code = f'res = {self.formula} + {self.flat_bonus}'
-        exec(code, self.manager.locals(), res_dict)
 
+        exec(code, self.manager.locals(), res_dict)
         return res_dict['res']
 
     def __add__(self, value: int):
@@ -45,7 +49,7 @@ def _parse(formula: str = ''):
     for c in formula:
         if c.isdigit() or c in _ALLOWED_C:
             if word:
-                res += f"self.{word}"
+                res += f"self['{word}']"
                 word = ""
 
             res += c
@@ -69,5 +73,9 @@ def _get_name() -> str:
 
 def get_formula(stat_name: str, owner_name: str):
     with open('stats.json', 'r') as file:
-        return json.load(file)[owner_name][stat_name]
+        res = json.load(file)[owner_name].get(stat_name)
+
+        assert res is not None, f'Unknown stat : "{stat_name}"'
+
+        return res
 
