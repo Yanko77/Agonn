@@ -16,7 +16,15 @@
     "accuracy": "10 + DEX",
     "perception": "10 + INT // 2.5 + CHA // 2.5 + HEI // 5",
     "communication": "10 + CHA",
-    "flexibility": "20 + DEX // 2 - HEI // 4 - VIT // 4"
+    "flexibility": "20 + DEX // 2 - HEI // 4 - VIT // 4",
+
+    "criminology": "knowledge + perception // 2",
+    "biology": "knowledge + smell // 2",
+    "strategy": "INT + communication // 2 + knowledge // 2",
+    "crystal_knowledge": "knowledge + POW // 2",
+
+    "jump": "agility + flexibility // 2 + HEI // 2"
+
 
   }
 }

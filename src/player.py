@@ -21,14 +21,12 @@ class Player:
             ... except AttributeError:
             ...     print('Attribute error')
             ... finally:
-            ...     print(p.INT == p.stats['INT'])
+            ...     print(p.INT == p.stats.__getattribute__(item))
             Attribute error
             True
         """
-        try:
-            return self.stats[item]
-        except KeyError:
-            raise AttributeError(f'Unknown attribute : {item}')
+        return self.stats.__getattribute__(item)
+
 
 
 class Stats:
@@ -70,10 +68,13 @@ class Stats:
         self.agility = Stat(self)
         self.accuracy = Stat(self)
         self.perception = Stat(self)
+        self.communication = Stat(self)
+        self.flexibility = Stat(self)
 
+        self.criminology = Stat(self)
         self.biology = Stat(self)
         self.strategy = Stat(self)
-        self.crystal_know = Stat(self)
+        self.crystal_knowledge = Stat(self)
 
         self.jump = Stat(self)
         self.climbing = Stat(self)
@@ -108,14 +109,22 @@ class Stats:
         """
         return locals()
 
+    @property
+    def list(self) -> tuple:
+        return tuple(attr for attr in self.__dict__.values() if isinstance(attr, Stat))
+
 
 if __name__ == '__main__':
     p = Player('a')
 
-    print(p.stats['knowledge'])
-    p.stats.knowledge += 1
-    print(p.stats['knowledge'])
-    p.stats.INT += 1
-    print(p.stats['knowledge'])
-    p.age += 2
-    print(p.stats['knowledge'])
+    l = p.list
+    print(l)
+    for stat in l:
+        print(f"{stat.name}, {stat.value}")
+
+    p.stats.INT += 20
+
+    l = p.list
+    print(l)
+    for stat in l:
+        print(f"{stat.name}, {stat.value}")

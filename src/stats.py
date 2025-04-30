@@ -2,7 +2,7 @@ import json
 
 from varname import varname
 
-_ALLOWED_C = {'+', '-', '*', '/', '//', '%', ' ', '(', ')'}
+_ALLOWED_C = {'+', '-', '*', '/', '//', '%', ' ', '(', ')', '.'}
 
 
 class Stat:
@@ -68,7 +68,12 @@ def _get_name() -> str:
 
     :return: str
     """
-    return varname(2).lstrip('self.')
+    name = varname(2)
+
+    if name.startswith('self.'):
+        name = name[5:]
+
+    return name
 
 
 def get_formula(stat_name: str, owner_name: str):
