@@ -10,23 +10,6 @@ class Player:
 
         self.stats = Stats(self)
 
-    def __getattr__(self, item):
-        """
-        If an attribute is not defined, then try to get it from the stats object.
-
-        Example:
-            >>> p = Player('game')
-            >>> try:
-            ...     p.__getattribute__('INT')
-            ... except AttributeError:
-            ...     print('Attribute error')
-            ... finally:
-            ...     print(p.INT == p.stats.__getattribute__(item))
-            Attribute error
-            True
-        """
-        return self.stats.__getattribute__(item)
-
 
 
 class Stats:
@@ -119,14 +102,19 @@ class Stats:
 if __name__ == '__main__':
     p = Player('a')
 
-    l = p.list
+    l = p.stats.list
     print(l)
     for stat in l:
         print(f"{stat.name}, {stat.value}")
 
-    p.stats.INT += 20
+    p.stats.level += 100
 
-    l = p.list
+    l = p.stats.list
     print(l)
     for stat in l:
         print(f"{stat.name}, {stat.value}")
+
+    print(p.stats.flexibility.formula)
+
+    # INT       | 1
+    # knowledge | 1.5

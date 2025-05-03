@@ -56,6 +56,9 @@ def _parse(formula: str = ''):
         else:
             word += c
 
+    if word:
+        res += f"self['{word}']"
+
     return res
 
 

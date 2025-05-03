@@ -1,39 +1,40 @@
 {
   "player": {
-    "age": "0",
+    "age": "20",
     "level": "0",
 
     "STR": "10 + level",
     "DEX": "10 + level",
     "VIT": "10 + level",
-    "CHA": "10 + level",
+    "CHA": "(10 + level) * (0.6 + HEI / 25)",
     "INT": "10 + level",
     "POW": "10 + level",
     "HEI": "10",
 
-    "knowledge": "10 + INT + (age - 20) // 2",
-    "agility": "10 + DEX * 4 // 3 - HEI // 3",
-    "accuracy": "10 + DEX",
-    "perception": "10 + INT // 2.5 + CHA // 2.5 + HEI // 5",
-    "communication": "10 + CHA",
-    "flexibility": "20 + DEX // 2 - HEI // 4 - VIT // 4",
+    "knowledge": "INT * 1.5 + (age - 20) // 2",
+    "agility": "DEX * 1.5 * (1.10 - HEI / 100)",
+    "accuracy": "DEX * 1.5",
+    "perception": "(INT * 3 / 4 + CHA * 3 / 4) * (0.8 + HEI / 50)",
+    "communication": "CHA * 1.5",
+    "flexibility": "VIT + DEX * 0.5",
 
-    "criminology": "knowledge + perception // 2",
-    "biology": "knowledge + smell // 2",
-    "strategy": "INT + communication // 2 + knowledge // 2",
-    "crystal_knowledge": "knowledge + POW // 3 + perception // 3",
+    "criminology": "knowledge + perception / 2",
+    "biology": "knowledge * 4 / 3 + perception / 6",
+    "strategy": "INT * 1.26 + communication * 0.33 + knowledge * 0.33",
+    "crystal_knowledge": "knowledge + POW / 4 + perception / 3",
 
-    "jump": "agility // 2 + flexibility // 3.5 + HEI // 2",
-    "climbing": "agility // 1.75 + flexibility // 3.5 + HEI // 3 + VIT // 5",
-    "swimming": "agility // 1.75 + flexibility // 3 + VIT",
-    "acrobatics": "agility + flexibility",
+    "jump": "(agility * 0.9 + flexibility * 0.6) * (0.8 + HEI / 50)",
+    "climbing": "(agility * 0.525 + flexibility * 0.525 + VIT * 0.675) * (0.8 + HEI / 50)",
+    "swimming": "agility * 0.675 + flexibility * 0.375 + VIT * 0.675",
+    "acrobatics": "agility * 0.75 + flexibility * 0.75",
 
-    "lock_picking": "accuracy + perception // 3 + CHA // 3",
-    "traps": "accuracy * 1.5 + perception // 3",
+    "lock_picking": "accuracy * 1.2 + perception * 0.15 + CHA * 0.225",
+    "traps": "accuracy * 0.45 + INT * 0.675 + flexibility * 0.3 + CHA * 0.45",
 
-    "martial_arts": "STR * 1.125 + DEX * 1.125 + VIT",
-    "stealth": "agility // 2 + DEX // 2 - HEI // 3 + flexibility // 2"
+    "martial_arts": "STR * 0.9 + DEX * 0.675 + VIT * 0.675",
+    "stealth": "agility * 1.05 + perception * 0.375 + DEX * 0.5625 - CHA * 0.45",
+    "dodging": "agility * 1.05 + perception * 0.3 + flexibility * 0.15",
 
-
+    "smell": "perception * 1.35 + CHA * 0.1125 + knowledge * 0.075"
   }
 }
