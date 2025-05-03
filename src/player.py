@@ -107,14 +107,8 @@ if __name__ == '__main__':
     for stat in l:
         print(f"{stat.name}, {stat.value}")
 
-    p.stats.level += 100
-
+    p.stats.DEX += 20
     l = p.stats.list
     print(l)
     for stat in l:
         print(f"{stat.name}, {stat.value}")
-
-    print(p.stats.flexibility.formula)
-
-    # INT       | 1
-    # knowledge | 1.5
