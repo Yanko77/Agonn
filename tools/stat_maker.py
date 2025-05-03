@@ -13,10 +13,10 @@ while True:
         input_ = input(f'STAT {i} | <nom> <type> <%importance>: ')
 
         try:
-            splited = input_.split(' ')
-            name = splited[0]
+            input_split = input_.split(' ')
+            name = input_split[0]
 
-            type_stat, importance = map(float, splited[1:])
+            type_stat, importance = map(float, input_split[1:])
 
             stats_infos.append((name, type_stat, importance))
             i += 1
