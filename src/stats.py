@@ -18,11 +18,13 @@ class Stat:
             self.formula = _parse(get_formula(self.name, self.owner.name))
         except AssertionError:
             self.formula = ""
+        self._old_formula_list = []
 
         self.flat_bonus = 0
 
+
     @property
-    def value(self):
+    def value(self) -> int:
         """
         Returns stat value.
         """
@@ -31,6 +33,27 @@ class Stat:
 
         exec(code, self.manager.locals(), res_dict)
         return res_dict['res']
+
+    def edit_formula(self, adding: str):
+        """
+        Edits the formula by adding ``adding`` at this end.
+        The added part will always be calculated after the orignal formula
+
+        :param adding: the part to add
+        """
+        self._old_formula_list.append(self.formula)
+
+        self.formula = f"({self.formula}) {adding}"
+
+    def back_to_previous_formula(self):
+        """
+        Edits the formula so it become again the previous formula.
+        It is useful when we want to do time limited stats buffs.
+        """
+        assert len(self._old_formula_list) > 0, f"No previous formula for '{self.name}'"
+
+        self.formula = self._old_formula_list.pop()
+
 
     def __add__(self, value: int):
         """

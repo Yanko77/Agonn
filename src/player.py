@@ -102,13 +102,24 @@ class Stats:
 if __name__ == '__main__':
     p = Player('a')
 
-    l = p.stats.list
-    print(l)
-    for stat in l:
-        print(f"{stat.name}, {stat.value}")
+    print(p.stats.jump.formula)
 
-    p.stats.DEX += 20
-    l = p.stats.list
-    print(l)
-    for stat in l:
-        print(f"{stat.name}, {stat.value}")
+    p.stats.jump.edit_formula("* 2")
+
+    print(p.stats.jump.formula)
+
+    p.stats.jump.edit_formula('- 1')
+
+    print(p.stats.jump.formula)
+
+    p.stats.jump.back_to_previous_formula()
+
+    print(p.stats.jump.formula)
+
+    p.stats.jump.back_to_previous_formula()
+
+    print(p.stats.jump.formula)
+
+    p.stats.jump.back_to_previous_formula()
+
+    print(p.stats.jump.formula)
