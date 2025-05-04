@@ -1,7 +1,5 @@
 import json
 
-_ALLOWED_C = {'+', '-', '*', '/', '%', ' ', '(', ')', '.'}
-
 
 class Stat:
 
@@ -99,7 +97,7 @@ class Stats:
         for stat_name in stats_name_list:
             setattr(self, stat_name, Stat(self, stat_name))
 
-    def get(self, stat_name:str) -> Stat:
+    def get(self, stat_name: str) -> Stat:
         """
         Returns the stat obj of self whose name is ``stat_name``.
 
@@ -124,7 +122,9 @@ class Stats:
     def list(self) -> tuple:
         return tuple(attr for attr in self.__dict__.values() if isinstance(attr, Stat))
 
+
 def _parse_formula(formula: str = ''):
+    _ALLOWED_C = '+-*/% ().'
     res = ''
 
     word = ""
@@ -142,6 +142,7 @@ def _parse_formula(formula: str = ''):
         res += f"self['{word}']"
 
     return res
+
 
 def get_data(entity_class_name: str) -> dict[str, str]:
     """
