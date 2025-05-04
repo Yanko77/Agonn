@@ -4,7 +4,7 @@ from stats import Stats
 class Entity:
     """
     An entity is a character of the game.
-    The player or all mobs are entities objects.
+    The player or all mobs are entities.
     """
     def __init__(self,
                  game: 'Game',
