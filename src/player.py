@@ -1,4 +1,5 @@
 from entity import Entity
+from stats import StatBuff
 
 
 class Player(Entity):
@@ -14,12 +15,19 @@ class Player(Entity):
 if __name__ == '__main__':
     p = Player('a')
 
-    for stat in p.stats.list:
-        print(stat.name, stat.value)
+    print(p.stats.get('knowledge').buffs)
+    print(p.stats.get('knowledge').value)
 
-    print(p.stats['INT'])
-    p.stats.get('INT').add(12)
-    print(p.stats['INT'])
+    buff1 = StatBuff('100%', formula='(formula) * 2')
+    buff1.id = 1
 
-    for stat in p.stats.list:
-        print(stat.name, stat.value)
+    p.stats.get('knowledge').add_buff(buff1)
+
+    print(p.stats.get('knowledge').buffs)
+    print(p.stats.get('knowledge').value)
+
+    p.stats.get('knowledge').add_buff(StatBuff('-100%', formula='(formula) / 2'))
+
+    print(p.stats.get('knowledge').buffs)
+    print(p.stats.get('knowledge').value)
+

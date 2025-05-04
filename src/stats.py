@@ -15,6 +15,7 @@ class Stat:
         self._old_formula_list = []
 
         self.flat_bonus = 0
+        self.buffs = dict()
 
     @property
     def value(self) -> int:
@@ -22,7 +23,12 @@ class Stat:
         Returns stat value.
         """
         res_dict = {}
-        code = f'res = round({self.formula} + {self.flat_bonus})'
+
+        formula = self.formula
+        for buff in self.buffs.values():
+            formula = buff.formula.replace('formula', formula)
+
+        code = f'res = round({formula} + {self.flat_bonus})'
 
         exec(code, self.manager.locals(), res_dict)
         return res_dict['res']
@@ -54,6 +60,9 @@ class Stat:
         assert type(value) is int, 'Stat object can only be added with int value'
 
         self.flat_bonus += value
+
+    def add_buff(self, buff):
+        self.buffs[buff.id] = buff
 
 
 class Stats:
@@ -121,6 +130,18 @@ class Stats:
     @property
     def list(self) -> tuple:
         return tuple(attr for attr in self.__dict__.values() if isinstance(attr, Stat))
+
+
+class StatBuff:
+
+    def __init__(self,
+                 game: 'Game',
+                 name: str,
+                 formula: str = "formula"):
+        self.name = name
+        self.formula = formula
+
+        self.id = game.get_unique_id()
 
 
 def _parse_formula(formula: str = ''):
