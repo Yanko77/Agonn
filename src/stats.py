@@ -8,14 +8,15 @@ class Stat:
                  name: str):
         self.manager = manager
         self.owner = manager.owner
+        self.game = self.owner.game
 
         self.name = name
 
         self.formula = _parse_formula(self.manager.raw_data.get(self.name))
         self._old_formula_list = []
 
-        self.flat_bonus = 0
-        self.buffs = dict()
+        self.buffs = {0: {}}  # Buffs are ordered by priority values: the higher the value, the sooner it will be
+                              # applied to the formula when it calculated the stat value
 
     @property
     def value(self) -> int:
@@ -24,45 +25,37 @@ class Stat:
         """
         res_dict = {}
 
-        formula = self.formula
-        for buff in self.buffs.values():
-            formula = buff.formula.replace('formula', formula)
-
-        code = f'res = round({formula} + {self.flat_bonus})'
+        formula = self._apply_buffs()
+        code = f'res = round({formula})'
 
         exec(code, self.manager.locals(), res_dict)
         return res_dict['res']
 
-    def edit_formula(self, adding: str):
-        """
-        Edits the formula by adding ``adding`` at this end.
-        The added part will always be calculated after the orignal formula
+    def _apply_buffs(self):
+        formula = self.formula
+        max_prio = max(self.buffs.keys())
 
-        :param adding: the part to add
-        """
-        self._old_formula_list.append(self.formula)
+        for prio in range(max_prio, -1, -1):
+            buffs = self.buffs.get(prio, {})
 
-        self.formula = f"({self.formula}) {adding}"
+            for buff in buffs.values():
+                formula = buff.apply(formula)
 
-    def back_to_previous_formula(self):
-        """
-        Edits the formula so it become again the previous formula.
-        It is useful when we want to do time limited stats buffs.
-        """
-        assert len(self._old_formula_list) > 0, f"No previous formula for '{self.name}'"
+        return formula
 
-        self.formula = self._old_formula_list.pop()
-
-    def add(self, value: int):
+    def add(self, value: int, name='Unknown'):
         """
         Adds a bonus flat value.
         """
         assert type(value) is int, 'Stat object can only be added with int value'
 
-        self.flat_bonus += value
+        self.add_buff(StatBuff(self.game, name=name, formula=f"formula + {value}"))
 
     def add_buff(self, buff):
-        self.buffs[buff.id] = buff
+        if self.buffs.get(buff.prio) is None:
+            self.buffs[buff.prio] = {}
+
+        self.buffs[buff.prio][buff.id] = buff
 
 
 class Stats:
@@ -134,14 +127,35 @@ class Stats:
 
 class StatBuff:
 
+    """
+    >>> from game import Game
+    >>> g = Game()
+
+    >>> buff = StatBuff(g, 'name', 'formula * 5')
+
+    >>> formula = 'self["INT"] + 5'
+    >>> buff.apply(formula)
+    '(self["INT"] + 5) * 5'
+    """
+
     def __init__(self,
                  game: 'Game',
                  name: str,
-                 formula: str = "formula"):
+                 formula: str = "formula",
+                 prio: int = 0):
         self.name = name
         self.formula = formula
 
+        self.prio = prio
+
         self.id = game.get_unique_id()
+
+    def apply(self, formula: str) -> str:
+        """
+        Applies the buff to the formula.
+        Returns the edited formula.
+        """
+        return self.formula.replace('formula', f"({formula})")
 
 
 def _parse_formula(formula: str = ''):

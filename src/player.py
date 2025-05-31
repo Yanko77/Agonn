@@ -13,21 +13,14 @@ class Player(Entity):
 
 
 if __name__ == '__main__':
-    p = Player('a')
+    from game import Game
+    p = Player(Game())
 
-    print(p.stats.get('knowledge').buffs)
-    print(p.stats.get('knowledge').value)
+    for stat in p.stats.list:
+        print(stat.name, stat.value)
 
-    buff1 = StatBuff('100%', formula='(formula) * 2')
-    buff1.id = 1
+    p.stats.get('trading').add(10)
 
-    p.stats.get('knowledge').add_buff(buff1)
-
-    print(p.stats.get('knowledge').buffs)
-    print(p.stats.get('knowledge').value)
-
-    p.stats.get('knowledge').add_buff(StatBuff('-100%', formula='(formula) / 2'))
-
-    print(p.stats.get('knowledge').buffs)
-    print(p.stats.get('knowledge').value)
+    for stat in p.stats.list:
+        print(stat.name, stat.value)
 
