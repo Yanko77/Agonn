@@ -1,5 +1,6 @@
 from __future__ import annotations
 import time
+import random
 
 """
 This module contains the game time manager
@@ -174,7 +175,12 @@ class TimeManager:
         self._time = 0  # Time value. Elapsed time in 10E-9 seconds since the game start.
     
     def update(self):
-        self.clock.tick()
+        incr = self.clock.tick()
+        self.incr_time(incr)
+
+    def incr_time(self, value: int):
+        self._time += value
+
     
     def get(self) -> int:
         """
@@ -193,18 +199,48 @@ class TimeManager:
     def hour(self) -> Hour:
         """
         Returns the current hour.
-
-        :returns: Hour object
         """
 
-        current_day_time_value = self.get() - self.day * self.TIME_RATIO * 24
-        hours = current_day_time_value // self.TIME_RATIO
+        current_daytime = self.get() % (self.TIME_RATIO * 24)
 
-        current_hour_time_value = current_day_time_value - hours * self.TIME_RATIO
-        minutes = current_hour_time_value * 60 // self.TIME_RATIO
+        hours = current_daytime // self.TIME_RATIO
+        minutes = current_daytime % self.TIME_RATIO
 
         return Hour(hours, minutes)
 
+    @property
+    def now(self) -> Date:
+        """
+        Returns current date.
+        """
+        return Date(self.day, self.hour)
+
+
+class Clock:
+    def __init__(self):
+        self.speed = 100
+
+        self.initial_time = time.perf_counter_ns()
+        self._prev_time = self.initial_time
+    
+    @property
+    def elapsed_time(self) -> int:
+        """
+        Returns the real elapsed time in ns since the start of the game
+        """
+        return time.perf_counter_ns() - self.initial_time
+    
+    def tick(self) -> int:
+        """
+        Updates this clock and returns the value to add to game current time value.
+        """
+        _time = self.elapsed_time
+
+        raw_incr = _time - self._prev_time
+
+        self._prev_time = _time
+
+        return raw_incr * self.speed // 100
 
 def ns_to_s(value: int) -> int:
     """
@@ -219,3 +255,41 @@ def s_to_ns(value: int) -> int:
     Returns `value` after conversion in 10E-9 seconds (floor value).
     """
     return value * 10**9
+
+
+def random_hour(hour1: Hour, hour2: Hour) -> Hour:
+    """
+    Returns a random Hour object between hour1 and hour2.
+    """
+    if hour1.hours <= hour2.hours:
+        hours_digit = random.randint(hour1.hours, hour2.hours)
+    else:
+        hours_digit = random.choice((
+            random.randint(hour1.hours, 23),
+            random.randint(0, hour2.hours)
+        ))
+
+    if hours_digit == hour1.hours:
+        minutes_digit = random.randint(hour1.minutes, 59)
+    elif hours_digit == hour2.hours:
+        minutes_digit = random.randint(0, hour2.minutes)
+    else:
+        minutes_digit = random.randint(0, 59)
+
+    return Hour(hours_digit, minutes_digit)
+
+
+def round_to_quarter(hour: Hour) -> Hour:
+    """
+    Rounds an Hour object to the nearest quarter-hour.
+    """
+
+    quarter = 0
+
+    while not -7 <= hour.minutes - quarter <= 7 and quarter < 60:
+        quarter += 15
+
+    return Hour(
+        hour.hours + quarter // 60,
+        quarter
+    )
