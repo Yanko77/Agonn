@@ -6,6 +6,12 @@ This module contains the game time manager
 """
 
 class Hour:
+    """
+    Represents an hour on 24h format.
+    
+    Example:
+        Hour("10:30") and Hour(10, 30) both represent 10h30
+    """
 
     def __init__(self, *args: str | tuple[int, int]):
         self.hours: int = None
@@ -101,3 +107,54 @@ class Hour:
 
     def __repr__(self):
         return f'{self.hours}:{self.minutes}'
+    
+
+class Date:
+    """
+    Represents a Date on format <nth day><hour>.
+
+    Example:
+        Date(3, Hour(10, 30)) represents the 3th day at 10h30
+    """
+
+    def __init__(self,
+                 days: int,
+                 hour: Hour):
+        
+        if days < 0:
+            raise ValueError(f"Date object cannot be defined with `days`={days}")
+
+        self.days = days
+        self.hour = hour
+    
+    def is_between(self, other1: Date, other2: Date) -> bool:
+        """
+        Returns True if this Date objects is between other1 and other2.
+        """
+        if other1 == other2:
+            return self == other1
+        elif other1 < other2:
+            return other1 <= self < other2
+        else:
+            return other1 <= self or self < other2
+
+    def __str__(self):
+        return f'{self.days} {self.hour}'
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self.days == other.days and self.hour == other.hour
+
+    def __lt__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self.days == other.days and self.hour < other.hour or self.days < other.days
+
+    def __le__(self, other) -> bool:
+        if not isinstance(other, Date):
+            raise TypeError('Can only compare two Date objects')
+
+        return self == other or self < other

@@ -52,3 +52,24 @@ class TestHour(unittest.TestCase):
         self.assertTrue(h2.is_between(Hour(00, 00), Hour(1, 00)))
         self.assertTrue(h2.is_between(Hour(23, 00), Hour(1, 00)))
         self.assertFalse(h2.is_between(Hour(1, 00), Hour(00, 00)))
+
+class testDate(unittest.TestCase):
+    def test_init(self):
+        d = Date(1, Hour(10, 30))
+
+        self.assertEqual(d.days, 1)
+        self.assertEqual(d.hour, Hour(10, 30))
+
+        self.assertRaises(ValueError, lambda: Date(-1, Hour(10, 20)))
+
+    def test_is_between(self):
+        d = Date(3, Hour(10, 30))
+
+        self.assertTrue(d.is_between(
+            Date(2, Hour(10, 30)),
+            Date(4, Hour(10, 30))
+        ))
+        self.assertFalse(d.is_between(
+            Date(4, Hour(10, 30)),
+            Date(2, Hour(10, 30))
+        ))
