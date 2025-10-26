@@ -1,4 +1,7 @@
-
+from src.game import Game
 
 def main():
-    pass
+    game = Game()
+
+    while True:
+        game.update()
