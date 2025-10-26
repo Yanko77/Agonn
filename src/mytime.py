@@ -158,3 +158,64 @@ class Date:
             raise TypeError('Can only compare two Date objects')
 
         return self == other or self < other
+    
+
+class TimeManager:
+
+    """
+    Manages the game time.
+    """
+
+    TIME_RATIO = 60  # 1 hour in real time equals to TIME_RATIO seconds ingame
+
+    def __init__(self):
+        self.clock = Clock()
+
+        self._time = 0  # Time value. Elapsed time in 10E-9 seconds since the game start.
+    
+    def update(self):
+        self.clock.tick()
+    
+    def get(self) -> int:
+        """
+        Returns the elapsed time in seconds since the game start.
+        """
+        return ns_to_s(self._time)
+
+    @property
+    def day(self) -> int:
+        """
+        Returns the current day.
+        """
+        return self.get() // (self.TIME_RATIO * 24)
+
+    @property
+    def hour(self) -> Hour:
+        """
+        Returns the current hour.
+
+        :returns: Hour object
+        """
+
+        current_day_time_value = self.get() - self.day * self.TIME_RATIO * 24
+        hours = current_day_time_value // self.TIME_RATIO
+
+        current_hour_time_value = current_day_time_value - hours * self.TIME_RATIO
+        minutes = current_hour_time_value * 60 // self.TIME_RATIO
+
+        return Hour(hours, minutes)
+
+
+def ns_to_s(value: int) -> int:
+    """
+    `value` is a time value in 10E-9 seconds.
+    Returns `value` after conversion in seconds (floor value).
+    """
+    return value // 10**9
+
+def s_to_ns(value: int) -> int:
+    """
+    `value` is a time value in seconds.
+    Returns `value` after conversion in 10E-9 seconds (floor value).
+    """
+    return value * 10**9
