@@ -1,193 +1,201 @@
-import json
+from __future__ import annotations
+from typing import Callable
+from enum import Enum
 
 
 class Stat:
+    """
+    Represents a single stat.
 
-    def __init__(self,
-                 manager: 'Stats',
+    It's defined by its name.
+    """
+
+    def __init__(self, 
                  name: str):
-        self.manager = manager
-        self.owner = manager.owner
-        self.game = self.owner.game
-
         self.name = name
 
-        self.formula = _parse_formula(self.manager.raw_data.get(self.name))
-        self._old_formula_list = []
 
-        self.buffs = {0: {}}  # Buffs are ordered by priority values: the higher the value, the sooner it will be
-                              # applied to the formula when it calculated the stat value
-
-    @property
-    def value(self) -> int:
-        """
-        Returns stat value.
-        """
-        res_dict = {}
-
-        formula = self._apply_buffs()
-        code = f'res = round({formula})'
-
-        exec(code, self.manager.locals(), res_dict)
-        return res_dict['res']
-
-    def _apply_buffs(self):
-        formula = self.formula
-        max_prio = max(self.buffs.keys())
-
-        for prio in range(max_prio, -1, -1):
-            buffs = self.buffs.get(prio, {})
-
-            for buff in buffs.values():
-                formula = buff.apply(formula)
-
-        return formula
-
-    def add(self, value: int, name='Unknown'):
-        """
-        Adds a bonus flat value.
-        """
-        assert type(value) is int, 'Stat object can only be added with int value'
-
-        self.add_buff(StatBuff(self.game, name=name, formula=f"formula + {value}"))
-
-    def add_buff(self, buff):
-        if self.buffs.get(buff.prio) is None:
-            self.buffs[buff.prio] = {}
-
-        self.buffs[buff.prio][buff.id] = buff
-
-
-class Stats:
+class StatsManager:
     """
-    To read a stat value:
-        Use ``__getitem__`` method
-
-        Example:
-            ```
-            stats = Stats(..., ...)
-            stats['knowledge']
-            ```
-
-    To access a stat:
-        Use ``get`` method
-
-        Example:
-            ```
-            stats = Stats(..., ...)
-            stats.get('knowledge')
-            ```
-
-    To increments a stat:
-        Use ``add`` method of Stat objects
-
-        Example:
-            ```
-            stats = Stats(..., ...)
-            knowledge = stats.get('knowledge')
-            knowledge.add(10)  # Increments knowledge stat by 10 (flat value)
-            ```
+    Manages all the Stat object of an entity.
     """
 
-    def __init__(self,
-                 owner: 'Entity'):
-        self.owner = owner
+    def __init__(self):
+        self._dict: dict[str, Stat] = {}
+        self._buffs_dict: dict[str, list[StatBuff]] = {}
+        
+        self.rel_register = StatsRelRegister()
 
-        self.raw_data = get_data(self.owner.class_name)
-
-        stats_name_list = self.raw_data.keys()
-        for stat_name in stats_name_list:
-            setattr(self, stat_name, Stat(self, stat_name))
-
-    def get(self, stat_name: str) -> Stat:
-        """
-        Returns the stat obj of self whose name is ``stat_name``.
-
-        :param stat_name: str
-        :return: Stat object
-        """
-        return self.__getattribute__(stat_name)
-
-    def __getitem__(self, stat_name: str) -> int:
-        """
-        Returns the value of ``stat_name`` in self.
-        """
-        return self.get(stat_name).value
-
-    def locals(self):
-        """
-        Returns locals variables of the class.
-        """
-        return locals()
-
+    
     @property
-    def list(self) -> tuple:
-        return tuple(attr for attr in self.__dict__.values() if isinstance(attr, Stat))
+    def list(self) -> list[Stat]:
+        """
+        Returns the list of all the Stat.
+        Order isn't fixed.
+        """
+        return self._dict.values()
+    
+    @property
+    def names_list(self) -> list[str]:
+        """
+        Returns the list of all the Stat names.
+        Order isn't fixed.
+        """
+        return self._dict.keys()
+    
+    def addStat(self, stat: Stat):
+        """
+        Adds a Stat to this StatsManager list.
+        Raises a ValueError if a stat with the same name as `stat` already exists.
+        """
+        if self._dict.get(stat.name):
+            raise ValueError(f"The Stat called '{stat.name}' already exists in this Manager")
+
+        self._dict[stat.name] = stat
+
+        # Init an empty buff list for this new Stat
+        self.setBuffList(stat.name, list())
+
+    def addBuff(self, buff: StatBuff, stat_name: str):
+        """
+        Adds a Buff to the Stat whose name is `stat_name`.
+        Raises a ValueError if the given stat name is unknown.
+        """
+        buff_list = self.getBuffList(stat_name)
+
+        # Find the index to insert the new buff
+        i = 0
+        while i < len(buff_list) and buff_list[i].prio >= buff.prio:
+            i += 1
+        
+        # Insert the new buff
+        if i == len(buff_list):
+            buff_list.append(buff)
+        else:
+            buff_list = buff_list[:i] + [buff] + buff_list[i:]
+        
+        # Update the buff list
+        self.setBuffList(stat_name, buff_list)
+    
+    def getValue(self, stat_name: str) -> int:
+        """
+        Returns the value of the contained stat whose name is `stat_name`.
+        Raises a ValueError if it doesn't exist.
+        """
+        value = self.getObj(stat_name).value
+
+        buffs_list = self.getBuffList(stat_name)
+
+        for buff in buffs_list:
+            value = buff.apply(value)
+
+        return value
+
+    def getObj(self, stat_name: str) -> Stat:
+        """
+        Returns the Stat object whose name is `stat_name`.
+        Raises a ValueError if it doesn't exist.
+        """
+        try:
+            res = self._dict[stat_name]
+        except KeyError:
+            raise ValueError(f"Unknown stat name : {stat_name}")
+
+        return res
+
+    def getBuffList(self, stat_name: str) -> list[StatBuff]:
+        """
+        Returns the list of all the StatBuff to be applied to the stat whose name is `stat_name`.
+        The returned list is ordered by priority order.
+        Raises a ValueError is the given stat name is unknown.
+        """
+        try:
+            res = self._buffs_dict[stat_name]
+        except KeyError:
+            raise ValueError(f"Unknown stat name : {stat_name}")
+
+        return res
+
+    def setBuffList(self, stat_name: str, buff_list: list[StatBuff]):
+        """
+        Sets the buff list of the Stat whose name is `stat_name`.
+        """
+        self._buffs_dict[stat_name] = buff_list
+
+class StatsRelRegister:
+    """
+    Represents a register of all the relationships between Stat objects.
+    """
+
+    def __init__(self):
+        self._rel_dict: dict[str, set[str]] = {}
+    
+    def getRelList(self, stat_name: str) -> set[str]:
+        """
+        Returns the names of all the Stat objects that have a relationship 
+            with the Stat whose name is `stat_name`.
+        Raises a ValueError if it doesn't exist.
+        """
+        try:
+            res = self._rel_dict[stat_name]
+        except KeyError:
+            raise ValueError(f"Unknown stat name : {stat_name}")
+        return res
 
 
 class StatBuff:
-
     """
-    >>> from game import Game
-    >>> g = Game()
+    Represents a Stat buff.
 
-    >>> buff = StatBuff(g, 'name', 'formula * 5')
+    A Buff can be temporary.
+    Its effect is applied after the Stat value calculation.
 
-    >>> formula = 'self["INT"] + 5'
-    >>> buff.apply(formula)
-    '(self["INT"] + 5) * 5'
+    It's defined by:
+    - StatBuffType, the type of the buff
+    - float, its value
+    - int, its priority value
     """
 
     def __init__(self,
-                 game: 'Game',
-                 name: str,
-                 formula: str = "formula",
-                 prio: int = 0):
-        self.name = name
-        self.formula = formula
-
+                 type_: StatBuffType,
+                 value: float,
+                 prio: int):
+        self.type = type_
+        self.value = value
         self.prio = prio
-
-        self.id = game.get_unique_id()
-
-    def apply(self, formula: str) -> str:
+    
+    def apply(self, value: int) -> int:
         """
-        Applies the buff to the formula.
-        Returns the edited formula.
+        Applies this buff to the value `value`.
+        Returns the result.
         """
-        return self.formula.replace('formula', f"({formula})")
+        func = self.type.getFunc()
+        return func(value, self.value)
 
+    def __eq__(self, other):
+        return isinstance(other, StatBuff) and self.type == other.type and self.value == other.value and self.prio == other.prio
 
-def _parse_formula(formula: str = ''):
-    _ALLOWED_C = '+-*/% ().'
-    res = ''
-
-    word = ""
-    for c in formula:
-        if c.isdigit() or c in _ALLOWED_C:
-            if word:
-                res += f"self['{word}']"
-                word = ""
-
-            res += c
-        else:
-            word += c
-
-    if word:
-        res += f"self['{word}']"
-
-    return res
-
-
-def get_data(entity_class_name: str) -> dict[str, str]:
+class StatBuffType(Enum):
     """
-    Returns all the stats data of the entity whose class name is ``entity_class_name``.
-    :param entity_class_name: str
-    :return: dict[str, str]
+    Represents a stat buff type.
     """
-    with open('stats.json', 'r') as file:
-        res = json.load(file).get(entity_class_name)
+    FLAT_BONUS = 0
+    MULTIPLIER = 1
 
-        assert res is not None, f'Unknown entity: {entity_class_name}'
-
-        return res
+    def getFunc(self) -> Callable[[int, int], int]:
+        """
+        Returns the function to use to apply the buff on a value.
+        """
+        _funcs = [
+            self.flatBonusApply,
+            self.multiplierApply
+        ]
+        return _funcs[self.value]
+    
+    @staticmethod
+    def flatBonusApply(stat_value: int, buff_value: int) -> int:
+        return round(stat_value + buff_value)
+    
+    @staticmethod
+    def multiplierApply(stat_value: int, buff_value: int) -> int:
+        return round(stat_value * buff_value)
