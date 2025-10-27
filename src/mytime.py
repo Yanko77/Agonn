@@ -59,11 +59,12 @@ class Hour:
         Initializes this Hour object from two integers : the hour and the minute values.
 
         Examples:
-            Hour(10, 50)
-            = 10h50
+            ```
+            Hour(10, 50)  # Represents 10h50
 
             Hour(100, 30)
             Raises a ValueError
+            ```
         """
         try:
             assert 0 <= hours <= 23
@@ -74,40 +75,109 @@ class Hour:
         self.hours = hours
         self.minutes = minutes
 
+
     def is_between(self, other1: Hour, other2: Hour) -> bool:
         """
-        Returns True if this Hour object is between other1 and other2.
+        Returns True if this Hour object is between other1 and other2 (both included).
         """
         if other1 == other2:
             return self == other1
         elif other1 < other2:
-            return other1 <= self < other2
+            return other1 <= self <= other2
         else:
-            return other1 <= self or self < other2
+            return other1 <= self or self <= other2
+    
+
+    def minutes_gap(self, other: Hour) -> int:
+        """
+        Returns the gap in minutes between this Hour and other.
+
+        Example:
+            ```
+            h1 = Hour(10, 30)
+            h2 = Hour(10, 50)
+
+            h1.minutes_gap(h2)  # Returns 20
+            ```
+        """
+
+        if self < other:
+            _hours_gap = other.hours - self.hours
+        else:
+            _hours_gap = 24 - self.hours + other.hours
+        
+        _minutes_gap = other.minutes - self.minutes
+        
+        return _hours_gap * 60 + _minutes_gap
+
+
+    def incr_hours(self, hours: int) -> Hour:
+        """
+        Returns a copy of this Hour object incremented by `hours` hours.
+        """
+        try:
+            assert hours >= 0
+        except:
+            raise ValueError(f"Cannot incr with negative hours value: {hours}")
+
+        new_hours = (self.hours + hours) % 24
+        return Hour(new_hours, self.minutes)
+    
+    
+    def incr_minutes(self, minutes: int) -> Hour:
+        """
+        Returns a copy of this Hour object incremented by `minutes` minutes.
+        """
+        try:
+            assert minutes >= 0
+        except:
+            raise ValueError(f"Cannot incr with negative minutes value: {minutes}")
+
+
+        sum_minutes = self.minutes + minutes
+        incr_hours = sum_minutes // 60
+        new_minutes = sum_minutes % 60
+
+        return Hour(self.hours, new_minutes).incr_hours(incr_hours)
+
 
     def __str__(self):
         return f'{self.hours}:{self.minutes}'
+    
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Hour):
             raise TypeError('Can only compare two Hour objects')
 
         return self.hours == other.hours and self.minutes == other.minutes
+    
 
     def __lt__(self, other) -> bool:
         if not isinstance(other, Hour):
             raise TypeError('Can only compare two Hour objects')
 
         return self.hours == other.hours and self.minutes < other.minutes or self.hours < other.hours
+    
 
     def __le__(self, other) -> bool:
         if not isinstance(other, Hour):
             raise TypeError('Can only compare two Hour objects')
 
         return self == other or self < other
+    
 
     def __repr__(self):
         return f'{self.hours}:{self.minutes}'
+    
+    
+    def __add__(self, other: Hour) -> Hour:
+        """
+        Adds this Hour object with `other`.
+        """
+        return self.incr_hours(other.hours).incr_minutes(other.minutes)
+    
+    def copy(self) -> Hour:
+        return Hour(self.hours, self.minutes)
     
 
 class Date:
@@ -127,32 +197,37 @@ class Date:
 
         self.days = days
         self.hour = hour
+
     
     def is_between(self, other1: Date, other2: Date) -> bool:
         """
-        Returns True if this Date objects is between other1 and other2.
+        Returns True if this Date objects is between other1 and other2 (both included).
         """
         if other1 == other2:
             return self == other1
         elif other1 < other2:
-            return other1 <= self < other2
+            return other1 <= self <= other2
         else:
-            return other1 <= self or self < other2
+            return other1 <= self or self <= other2
+        
 
     def __str__(self):
         return f'{self.days} {self.hour}'
+    
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Date):
             raise TypeError('Can only compare two Date objects')
 
         return self.days == other.days and self.hour == other.hour
+    
 
     def __lt__(self, other) -> bool:
         if not isinstance(other, Date):
             raise TypeError('Can only compare two Date objects')
 
         return self.days == other.days and self.hour < other.hour or self.days < other.days
+    
 
     def __le__(self, other) -> bool:
         if not isinstance(other, Date):
@@ -180,7 +255,6 @@ class TimeManager:
 
     def incr_time(self, value: int):
         self._time += value
-
     
     def get(self) -> int:
         """
@@ -221,7 +295,7 @@ class Clock:
         self.speed = 100
 
         self.initial_time = time.perf_counter_ns()
-        self._prev_time = self.initial_time
+        self._prev_time = 0
     
     @property
     def elapsed_time(self) -> int:
@@ -259,29 +333,24 @@ def s_to_ns(value: int) -> int:
 
 def random_hour(hour1: Hour, hour2: Hour) -> Hour:
     """
-    Returns a random Hour object between hour1 and hour2.
+    Returns a random Hour object between hour1 and hour2 (both included).
+
+    It assumes that hour1 is before hour2.
+    For example, if `hour1 = Hour(23, 30)` and `hour2 = Hour(1, 30)`, it assumes that hour2 is during the next day.
     """
-    if hour1.hours <= hour2.hours:
-        hours_digit = random.randint(hour1.hours, hour2.hours)
-    else:
-        hours_digit = random.choice((
-            random.randint(hour1.hours, 23),
-            random.randint(0, hour2.hours)
-        ))
 
-    if hours_digit == hour1.hours:
-        minutes_digit = random.randint(hour1.minutes, 59)
-    elif hours_digit == hour2.hours:
-        minutes_digit = random.randint(0, hour2.minutes)
-    else:
-        minutes_digit = random.randint(0, 59)
+    minutes_gap = hour1.minutes_gap(hour2)
 
-    return Hour(hours_digit, minutes_digit)
+    random_value = random.randint(0, minutes_gap)
+
+    hours, minutes = random_value // 60, random_value % 60
+
+    return hour1 + Hour(hours, minutes)
 
 
 def round_to_quarter(hour: Hour) -> Hour:
     """
-    Rounds an Hour object to the nearest quarter-hour.
+    Rounds an Hour object rounded to the nearest quarter-hour.
     """
 
     quarter = 0
@@ -289,7 +358,12 @@ def round_to_quarter(hour: Hour) -> Hour:
     while not -7 <= hour.minutes - quarter <= 7 and quarter < 60:
         quarter += 15
 
-    return Hour(
-        hour.hours + quarter // 60,
-        quarter
-    )
+    if quarter == 60:
+        return Hour(hour.hours, 0).incr_hours(1)
+    else:
+        return Hour(
+            hour.hours,
+            quarter
+        )
+
+        
