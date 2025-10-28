@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import Callable
-from enum import Enum
 
 
 class Stat:
@@ -11,8 +10,13 @@ class Stat:
     """
 
     def __init__(self, 
-                 name: str):
+                 name: str,
+                 value: int = 0):
         self.name = name
+        self.value = value
+    
+    def setValue(self, value: int):
+        self.value = value
 
 
 class StatsManager:
@@ -154,15 +158,21 @@ class StatBuff:
     - StatBuffType, the type of the buff
     - float, its value
     - int, its priority value
+
+    By default, the used priority value depends on the Buff type.
     """
 
     def __init__(self,
                  type_: StatBuffType,
                  value: float,
-                 prio: int):
+                 prio: int = None):
         self.type = type_
         self.value = value
-        self.prio = prio
+
+        if prio is None:
+            self.prio = self.type.prio
+        else:
+            self.prio = prio
     
     def apply(self, value: int) -> int:
         """
@@ -175,22 +185,23 @@ class StatBuff:
     def __eq__(self, other):
         return isinstance(other, StatBuff) and self.type == other.type and self.value == other.value and self.prio == other.prio
 
-class StatBuffType(Enum):
+class StatBuffType:
     """
     Represents a stat buff type.
     """
-    FLAT_BONUS = 0
-    MULTIPLIER = 1
+
+    def __init__(self,
+                 default_prio: int,
+                 apply_func: Callable[[int, int], int]
+                 ):
+        self.prio = default_prio
+        self._func = apply_func
 
     def getFunc(self) -> Callable[[int, int], int]:
         """
         Returns the function to use to apply the buff on a value.
         """
-        _funcs = [
-            self.flatBonusApply,
-            self.multiplierApply
-        ]
-        return _funcs[self.value]
+        return self._func
     
     @staticmethod
     def flatBonusApply(stat_value: int, buff_value: int) -> int:
@@ -199,3 +210,10 @@ class StatBuffType(Enum):
     @staticmethod
     def multiplierApply(stat_value: int, buff_value: int) -> int:
         return round(stat_value * buff_value)
+
+class StatBuffTypes:
+    """
+    Enumerates all the existing StatBuff types
+    """
+    FLAT_BONUS = StatBuffType(0, StatBuffType.flatBonusApply)
+    MULTIPLIER = StatBuffType(10, StatBuffType.multiplierApply)
