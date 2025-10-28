@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import Callable
+import re
+from copy import copy
 
 
 class Stat:
@@ -11,12 +13,60 @@ class Stat:
 
     def __init__(self, 
                  name: str,
-                 value: int = 0):
+                 formula: str = "0"):
         self.name = name
-        self.value = value
+        
+        """
+        Example of formula :
+        "10 + `charisma` * 2 + `dexterity`"
+        This formula is valid if charisma and dexterity both exist.
+        """
+        self.formula: str = formula
+
     
-    def setValue(self, value: int):
-        self.value = value
+    def getRequiredRels(self) -> list[str]:
+        """
+        Returns the name of all the Stats required to evaluate this Stat value.
+        """
+        return list(map(
+            lambda x: x.replace("`", ""),
+            re.findall(r"`[a-zA-Z0-9_]*`", self.formula)))
+    
+    def getValue(self, other_stats: dict[str, int]) -> int:
+        """
+        Returns this Stat value (before Buff application).
+
+        Parameters
+        ----------
+        other_stats: dict[str, int]
+            A dict containing the values of all the Stat objects that are concerned by this evaluation.
+            Example:
+                If this Stat formula is : ```"10 + `charisma`"```.
+                Then `other_stat` has to contain : `{"charisma": <value>}`
+        
+        Raises
+        ------
+        ValueError
+            if `other_stats` does not contain all needed Stat objects
+        """
+
+        formula = copy(self.formula)
+
+        # Check that formula is evaluable: 
+        # All the stat names used in the formula are in `other_stats`
+        for stat_name in self.getRequiredRels():
+            if other_stats.get(stat_name) is None:
+                raise ValueError(f"The stat dict doesn't contain the required Stat objects : formula='{self.formula}', other_stats={other_stats}")
+
+        # Replace with Stats value
+        for stat_name in other_stats.keys():
+            stat_value = other_stats[stat_name]
+            formula = formula.replace(stat_name, str(stat_value))
+        
+        # Remove "`" characters
+        formula = formula.replace("`", "")
+
+        return eval(formula)
 
 
 class StatsManager:
@@ -60,6 +110,15 @@ class StatsManager:
         # Init an empty buff list for this new Stat
         self.setBuffList(stat.name, list())
 
+        # Init an empty rel list for this new Stat
+        self.rel_register.addStat(stat.name)
+
+        # Add required rel depending on this new Stat formula
+        _required_rels = stat.getRequiredRels()
+        for rel_stat_name in _required_rels:
+            self.rel_register.addRel(stat.name, rel_stat_name)
+
+
     def addBuff(self, buff: StatBuff, stat_name: str):
         """
         Adds a Buff to the Stat whose name is `stat_name`.
@@ -86,10 +145,16 @@ class StatsManager:
         Returns the value of the contained stat whose name is `stat_name`.
         Raises a ValueError if it doesn't exist.
         """
-        value = self.getObj(stat_name).value
 
+        # Get value
+        _stat = self.getObj(stat_name)
+        _rel_values = self.getRelValues(stat_name)
+        value = _stat.getValue(_rel_values)
+
+        # Get buffs
         buffs_list = self.getBuffList(stat_name)
 
+        # Apply buffs
         for buff in buffs_list:
             value = buff.apply(value)
 
@@ -125,6 +190,18 @@ class StatsManager:
         Sets the buff list of the Stat whose name is `stat_name`.
         """
         self._buffs_dict[stat_name] = buff_list
+    
+    def getRelValues(self, stat_name: str) -> dict[str, int]:
+        """
+        Return the dict of the values of all the Stat that have a relationship
+        with the stat whose name is `stat_name`.
+        """
+        rels = self.rel_register.getRelList(stat_name)
+        res = {}
+        for other_stat_name in rels:
+            res[other_stat_name] = self.getValue(other_stat_name)
+        
+        return res
 
 class StatsRelRegister:
     """
@@ -145,6 +222,22 @@ class StatsRelRegister:
         except KeyError:
             raise ValueError(f"Unknown stat name : {stat_name}")
         return res
+    
+    
+    def addStat(self, stat_name: str):
+        """
+        Adds a Stat to this register.
+        It initializes an empty relationships set.
+        """
+        self._rel_dict[stat_name] = set()
+
+    
+    def addRel(self, stat_name1: str, stat_name2: str):
+        """
+        Adds a new relationship between the stats whose names are `stat_name1` and `stat_name2`.
+        `stat_name2` appears in `stat_name1` Stat formula.
+        """
+        self._rel_dict[stat_name1].add(stat_name2)
 
 
 class StatBuff:
