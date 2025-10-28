@@ -15,6 +15,22 @@ class TestStatManager(unittest.TestCase):
 
         self.assertRaises(ValueError, lambda: manager.addStat(Stat("charisma")))
     
+    def test_addStatWithRel(self):
+        manager = StatsManager()
+
+        s1 = Stat("charisma", formula="10")
+        manager.addStat(s1)
+
+        s2 = Stat("dexterity", formula="`charisma` * 1.5")
+        manager.addStat(s2)
+
+        self.assertEqual(manager.rel_register.getRelList(s2.name), {"charisma"}) 
+
+        s3 = Stat("wisdom", formula="`charisma` * 2 + `dexterity` + 5")
+        manager.addStat(s3)
+
+        self.assertEqual(manager.rel_register.getRelList(s3.name), {"charisma", "dexterity"})
+    
     def test_addBuff(self):
         manager = StatsManager()
 
@@ -37,11 +53,11 @@ class TestStatManager(unittest.TestCase):
 
         self.assertEqual(manager.getBuffList("charisma"), [b2, b, b3])
 
-    def test_getValue(self):
+    def test_getValueWithoutRel(self):
         manager = StatsManager()
 
         # Without any buff
-        s = Stat("charisma", value=10)
+        s = Stat("charisma", formula="10")
         manager.addStat(s)
 
         self.assertEqual(manager.getValue("charisma"), 10)
@@ -64,3 +80,33 @@ class TestStatManager(unittest.TestCase):
 
         self.assertEqual(manager.getValue("charisma"), 30)
 
+    def test_getValueWithRel(self):
+        manager = StatsManager()
+
+        s0 = Stat("wisdom", "7 + `charisma` + `dexterity`")
+        s1 = Stat("charisma", "10 + `dexterity`")
+        s2 = Stat("dexterity", formula="5")
+
+        manager.addStat(s2)
+        manager.addStat(s1)
+        manager.addStat(s0)
+
+        # Without any buff
+        self.assertEqual(manager.getValue("dexterity"), 5)
+        self.assertEqual(manager.getValue("charisma"), 10 + 5)
+        self.assertEqual(manager.getValue("wisdom"), 7 + 10 + 5 + 5)
+
+        # With buffs
+        b1 = StatBuff(StatBuffTypes.FLAT_BONUS, 3)
+        manager.addBuff(b1, "dexterity")
+
+        self.assertEqual(manager.getValue("dexterity"), 8)
+        self.assertEqual(manager.getValue("charisma"), 10 + 8)
+        self.assertEqual(manager.getValue("wisdom"), 7 + 10 + 8 + 8)
+
+        b2 = StatBuff(StatBuffTypes.MULTIPLIER, 2)
+        manager.addBuff(b2, "charisma")
+
+        self.assertEqual(manager.getValue("dexterity"), 8)
+        self.assertEqual(manager.getValue("charisma"), (10 + 8) * 2)
+        self.assertEqual(manager.getValue("wisdom"), 7 + (10 + 8) * 2 + 8)
