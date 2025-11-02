@@ -3,12 +3,13 @@ from typing import Callable
 import re
 from copy import copy
 
+from Agonn.src.id import genId
 
 class Stat:
     """
     Represents a single stat.
 
-    It's defined by its name.
+    It's defined by its name and its formula.
     """
 
     def __init__(self, 
@@ -140,6 +141,27 @@ class StatsManager:
         # Update the buff list
         self.setBuffList(stat_name, buff_list)
     
+    def removeBuff(self, buff_id: int, stat_name: str):
+        """
+        Removes the StatBuff whose id is `buff_id` from the Stat whose name is `stat_name`.
+        Raises ValueError is the buff id or the stat name is unknown.
+        """
+        buffs = self.getBuffList(stat_name)
+
+        # Get selected buff index in the list
+        i = 0
+        while i < len(buffs) and buffs[i].id != buff_id:
+            i += 1
+        
+        # Check that the buff exists
+        if i == len(buffs):
+            raise ValueError(f"Buff id is unknown : {buff_id}")
+    
+        buffs.pop(i)
+
+        self.setBuffList(stat_name, buffs)
+
+    
     def getValue(self, stat_name: str) -> int:
         """
         Returns the value of the contained stat whose name is `stat_name`.
@@ -202,6 +224,17 @@ class StatsManager:
             res[other_stat_name] = self.getValue(other_stat_name)
         
         return res
+    
+    def incrStat(self, stat_name: str, value: int) -> None:
+        """
+        Adds a flat bonus buff to the stat whose name is `stat_name`.
+        The value of this buff is equal to `value`.
+        Raises a ValueError if the stat name is unknown.
+        """
+        buff = StatBuff(StatBuffTypes.FLAT_BONUS, value)
+
+        self.addBuff(buff, stat_name)
+
 
 class StatsRelRegister:
     """
@@ -266,6 +299,8 @@ class StatBuff:
             self.prio = self.type.prio
         else:
             self.prio = prio
+
+        self.id = genId()
     
     def apply(self, value: int) -> int:
         """

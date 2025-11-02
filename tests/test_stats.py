@@ -52,6 +52,39 @@ class TestStatManager(unittest.TestCase):
         manager.addBuff(b3, "charisma")
 
         self.assertEqual(manager.getBuffList("charisma"), [b2, b, b3])
+    
+    def testRemoveBuff(self):
+        manager = StatsManager()
+
+        # ValueError with unknown stat
+        self.assertRaises(ValueError, lambda: manager.removeBuff(1, "charisma"))
+
+        # ValueError with unknown buff
+        manager.addStat(Stat("charisma"))
+        self.assertRaises(ValueError, lambda: manager.removeBuff(1, "charisma"))
+
+        # Removes correctly with a 1 buff list
+        b = StatBuff(StatBuffTypes.FLAT_BONUS, 10)
+        manager.addBuff(b, "charisma")
+        manager.removeBuff(b.id, "charisma")
+        self.assertEqual(manager.getBuffList("charisma"), [])
+
+        # Removes correctly with a 2+ buff list
+        b1 = StatBuff(StatBuffTypes.FLAT_BONUS, 10)
+        b2 = StatBuff(StatBuffTypes.FLAT_BONUS, 20)
+        manager.addBuff(b1, "charisma")
+        manager.addBuff(b2, "charisma")
+        manager.removeBuff(b1.id, "charisma")
+        self.assertEqual(manager.getBuffList("charisma"), [b2])
+
+        b3 = StatBuff(StatBuffTypes.MULTIPLIER, 1.5)
+        b4 = StatBuff(StatBuffTypes.FLAT_BONUS, 5)
+
+        manager.addBuff(b3, "charisma")
+        manager.addBuff(b4, "charisma")
+        manager.removeBuff(b3.id, "charisma")
+        self.assertEqual(manager.getBuffList("charisma"), [b2, b4])
+         
 
     def test_getValueWithoutRel(self):
         manager = StatsManager()
