@@ -76,6 +76,9 @@ class Stat:
     
     def __repr__(self):
         return f"Stat<{self.name}, {self.formula}>"
+    
+    def __eq__(self, other):
+        return isinstance(other, Stat) and (self.name, self.formula) == (other.name, other.formula)
 
 
 class StatsManager:
@@ -83,23 +86,25 @@ class StatsManager:
     Manages all the Stat object of an entity.
     """
 
-    def __init__(self, entity_name: str = None):
+    def __init__(self,
+                 entity_name: str = None,
+                 _json_file: str = JSON_FILE):
         self._dict: dict[str, Stat] = {}
         self._buffs_dict: dict[str, list[StatBuff]] = {}
         
         self.rel_register = StatsRelRegister()
 
         if entity_name:
-            self._init_from_entity(entity_name)
+            self._init_from_entity(entity_name, _json_file)
     
-    def _init_from_entity(self, entity_name: str) -> None:
+    def _init_from_entity(self, entity_name: str, _file: str) -> None:
         """
         Init stats from a JSON file containing all the stats name for
         entity whose name is `entity_name`.
-        The json file path is `JSON_FILE`.
+        By default the used json file path is `JSON_FILE`.
         Raises a ValueError if `entity_name` is unknown.
         """
-        with open(JSON_FILE, 'r') as file:
+        with open(_file, 'r') as file:
             data = json.loads(file.read())
 
         try:

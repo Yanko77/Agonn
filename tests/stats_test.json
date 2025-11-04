@@ -1,0 +1,7 @@
+{
+    "test": {
+        "charisma": null,
+        "constitution": "10",
+        "dexterity": "`charisma` + 10"
+    }
+}

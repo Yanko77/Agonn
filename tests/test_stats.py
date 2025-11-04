@@ -85,7 +85,6 @@ class TestStatManager(unittest.TestCase):
         manager.removeBuff(b3.id, "charisma")
         self.assertEqual(manager.getBuffList("charisma"), [b2, b4])
          
-
     def test_getValueWithoutRel(self):
         manager = StatsManager()
 
@@ -143,3 +142,16 @@ class TestStatManager(unittest.TestCase):
         self.assertEqual(manager.getValue("dexterity"), 8)
         self.assertEqual(manager.getValue("charisma"), (10 + 8) * 2)
         self.assertEqual(manager.getValue("wisdom"), 7 + (10 + 8) * 2 + 8)
+
+    def test_initFromEntity(self):
+        manager = StatsManager("test", "tests/stats_test.json")
+
+        self.assertEqual(len(manager.names_list), 3)
+        for name in manager.names_list:
+            self.assertIn(name, ("charisma", "constitution", "dexterity"))
+
+        self.assertEqual(manager.getObj("charisma"), Stat("charisma"))
+        self.assertEqual(manager.getObj("constitution"), Stat("constitution", "10"))
+        
+        self.assertEqual(manager.getObj("dexterity").formula, "`charisma` + 10")
+        self.assertEqual(manager.getValue("dexterity"), manager.getValue("charisma") + 10)
