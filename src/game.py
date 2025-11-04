@@ -1,6 +1,6 @@
 import pygame
 
-from src.mytime import TimeManager
+from .mytime import TimeManager
 
 
 class Game:

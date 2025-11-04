@@ -7,7 +7,7 @@ import pygame
 from dataclasses import dataclass
 import time
 
-import biomes
+from . import biomes
 from src.config import MAP_SIZE
 
 

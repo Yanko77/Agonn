@@ -1,6 +1,6 @@
 import unittest
 
-from Agonn.src.stats import *
+from src.stats import *
 
 class TestStatManager(unittest.TestCase):
 

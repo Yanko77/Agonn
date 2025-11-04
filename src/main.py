@@ -1,4 +1,5 @@
-from src.game import Game
+from .game import Game
+from . import stats
 
 import time
 
@@ -7,3 +8,6 @@ def main():
 
     while True:
         game.update()
+    
+def main2():
+    stats.main()

@@ -1,4 +1,4 @@
-from stats import Stats
+from .stats import Stats
 
 
 class Entity:

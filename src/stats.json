@@ -1,49 +1,18 @@
 {
   "player": {
-    "age": "20",
-    "level": "0",
-
-    "STR": "10 + level",
-    "DEX": "10 + level",
-    "VIT": "10 + level",
-    "CHA": "(10 + level) * (0.6 + HEI / 25)",
-    "INT": "10 + level",
-    "POW": "10 + level",
-    "HEI": "10",
-
-    "knowledge": "INT * 1.5 + (age - 20) // 2",
-    "agility": "DEX * 1.5 * (1.20 - HEI / 50)",
-    "accuracy": "DEX + VIT * 0.25 + CHA * 0.25",
-    "perception": "(INT * 3 / 4 + CHA * 3 / 4) * (0.9 + HEI / 100)",
-    "communication": "(CHA * 1.5) * (0.8 + HEI / 50)",
-    "flexibility": "(VIT + DEX * 0.5) * (1.10 - HEI / 100)",
-
-    "criminology": "knowledge + perception / 2",
-    "biology": "knowledge * 4 / 3 + perception / 6",
-    "strategy": "INT * 1.26 + communication * 0.33 + knowledge * 0.33",
-    "crystal_knowledge": "knowledge + POW / 4 + perception / 3",
-
-    "jump": "(agility * 0.9 + flexibility * 0.6) * (0.8 + HEI / 50)",
-    "climbing": "(agility * 0.525 + flexibility * 0.525 + VIT * 0.675) * (0.8 + HEI / 50)",
-    "swimming": "agility * 0.675 + flexibility * 0.375 + VIT * 0.675",
-    "acrobatics": "agility * 0.75 + flexibility * 0.75",
-
-    "lock_picking": "accuracy * 1.2 + perception * 0.15 + CHA * 0.225",
-    "traps": "accuracy * 0.45 + INT * 0.675 + flexibility * 0.3 + CHA * 0.45",
-
-    "martial_arts": "STR * 1.2375 + DEX * 0.3375 + accuracy * 0.225 + VIT * 0.3375",
-    "stealth": "agility * 1.05 + perception * 0.375 + DEX * 0.5625 - CHA * 0.45",
-    "dodging": "agility * 0.75 + accuracy * 0.3 + perception * 0.3 + flexibility * 0.15",
-    "draw_quickly": "DEX * 1.575 + accuracy * 0.225 + agility * 0.12 + flexibility * 0.105",
-
-    "balance": "perception * 0.675 + VIT * 0.675 + flexibility * 0.12 + CHA * 0.3825",
-    "listen": "perception * 1.05 + communication * 0.3 + INT * 0.225",
-    "smell": "perception * 1.35 + CHA * 0.1125 + knowledge * 0.075",
-    "see": "perception * 1.05 + CHA * 0.3375 + POW * 0.3375",
-    "taste": "perception * 1.05 + CHA * 0.675",
-    "chase": "perception * 1.05 + VIT * 0.3375 + agility * 0.225",
-
-    "trading": "communication * 1.05 + knowledge * 0.3 + perception * 0.15",
-    "smooth_talk": "communication * 1.2 + INT * 0.45"
+    "strength": null,
+    "dexterity": null,
+    "consitution": null,
+    "intelligence": null,
+    "wisdom": null,
+    "charisma": null
+  },
+  "ore": {
+    "strength": null,
+    "dexterity": null,
+    "consitution": null,
+    "intelligence": null,
+    "wisdom": null,
+    "charisma": null
   }
 }

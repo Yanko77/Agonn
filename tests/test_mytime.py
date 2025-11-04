@@ -11,7 +11,7 @@
 
 import unittest
 
-from Agonn.src.mytime import Hour, Date, round_to_quarter, random_hour
+from src.mytime import Hour, Date, round_to_quarter, random_hour
 
 class TestHour(unittest.TestCase):
     def test_init_w_str(self):

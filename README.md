@@ -6,8 +6,14 @@ Project is still in development.
 
 ## Tests
 
-```
-pytest tests
+Execute this command in the directory : `Agonn/`
+```commandline
+pytest tests/
 ```
 
+## Main script execution
 
+Execute this command in the directory : `Agonn/`
+```commandline
+python .
+```

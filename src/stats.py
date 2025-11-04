@@ -2,8 +2,11 @@ from __future__ import annotations
 from typing import Callable
 import re
 from copy import copy
+import json
 
-from Agonn.src.id import genId
+from .id import genId
+
+JSON_FILE = "src/stats.json"
 
 class Stat:
     """
@@ -14,7 +17,7 @@ class Stat:
 
     def __init__(self, 
                  name: str,
-                 formula: str = "0"):
+                 formula: str = None):
         self.name = name
         
         """
@@ -22,6 +25,8 @@ class Stat:
         "10 + `charisma` * 2 + `dexterity`"
         This formula is valid if charisma and dexterity both exist.
         """
+        if formula is None: 
+            formula = "0"
         self.formula: str = formula
 
     
@@ -33,13 +38,13 @@ class Stat:
             lambda x: x.replace("`", ""),
             re.findall(r"`[a-zA-Z0-9_]*`", self.formula)))
     
-    def getValue(self, other_stats: dict[str, int]) -> int:
+    def getValue(self, rel_stats: dict[str, int]) -> int:
         """
         Returns this Stat value (before Buff application).
 
         Parameters
         ----------
-        other_stats: dict[str, int]
+        rel_stats: dict[str, int]
             A dict containing the values of all the Stat objects that are concerned by this evaluation.
             Example:
                 If this Stat formula is : ```"10 + `charisma`"```.
@@ -48,26 +53,29 @@ class Stat:
         Raises
         ------
         ValueError
-            if `other_stats` does not contain all needed Stat objects
+            if `rel_stats` does not contain all needed Stat objects
         """
 
         formula = copy(self.formula)
 
         # Check that formula is evaluable: 
-        # All the stat names used in the formula are in `other_stats`
+        # All the stat names used in the formula are in `rel_stats`
         for stat_name in self.getRequiredRels():
-            if other_stats.get(stat_name) is None:
-                raise ValueError(f"The stat dict doesn't contain the required Stat objects : formula='{self.formula}', other_stats={other_stats}")
+            if rel_stats.get(stat_name) is None:
+                raise ValueError(f"The stat dict doesn't contain the required Stat objects : formula='{self.formula}', rel_stats={rel_stats}")
 
         # Replace with Stats value
-        for stat_name in other_stats.keys():
-            stat_value = other_stats[stat_name]
+        for stat_name in rel_stats.keys():
+            stat_value = rel_stats[stat_name]
             formula = formula.replace(stat_name, str(stat_value))
         
         # Remove "`" characters
         formula = formula.replace("`", "")
 
         return eval(formula)
+    
+    def __repr__(self):
+        return f"Stat<{self.name}, {self.formula}>"
 
 
 class StatsManager:
@@ -75,20 +83,40 @@ class StatsManager:
     Manages all the Stat object of an entity.
     """
 
-    def __init__(self):
+    def __init__(self, entity_name: str = None):
         self._dict: dict[str, Stat] = {}
         self._buffs_dict: dict[str, list[StatBuff]] = {}
         
         self.rel_register = StatsRelRegister()
 
+        if entity_name:
+            self._init_from_entity(entity_name)
     
+    def _init_from_entity(self, entity_name: str) -> None:
+        """
+        Init stats from a JSON file containing all the stats name for
+        entity whose name is `entity_name`.
+        The json file path is `JSON_FILE`.
+        Raises a ValueError if `entity_name` is unknown.
+        """
+        with open(JSON_FILE, 'r') as file:
+            data = json.loads(file.read())
+
+        try:
+            stats_dict = data[entity_name]
+        except ValueError:
+            raise ValueError(f'The entity is unknown : {entity_name}')
+
+        for name in stats_dict.keys():
+            self.addStat(Stat(name, stats_dict[name]))
+
     @property
     def list(self) -> list[Stat]:
         """
         Returns the list of all the Stat.
         Order isn't fixed.
         """
-        return self._dict.values()
+        return list(self._dict.values())
     
     @property
     def names_list(self) -> list[str]:
@@ -96,7 +124,7 @@ class StatsManager:
         Returns the list of all the Stat names.
         Order isn't fixed.
         """
-        return self._dict.keys()
+        return list(self._dict.keys())
     
     def addStat(self, stat: Stat):
         """
@@ -156,7 +184,7 @@ class StatsManager:
         # Check that the buff exists
         if i == len(buffs):
             raise ValueError(f"Buff id is unknown : {buff_id}")
-    
+     
         buffs.pop(i)
 
         self.setBuffList(stat_name, buffs)
