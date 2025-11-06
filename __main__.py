@@ -1,4 +1,4 @@
 
-from src.main import main
+from src.world.map import main
 
 main()

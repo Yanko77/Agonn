@@ -1,5 +1,5 @@
 from .game import Game
-from . import stats
+from .world import world
 
 import time
 
@@ -8,6 +8,6 @@ def main():
 
     while True:
         game.update()
-    
+
 def main2():
-    stats.main()
+    world.main()
