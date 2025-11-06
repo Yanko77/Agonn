@@ -1,3 +1,13 @@
+######################################################################
+# Copyright 2025 (c) Yanko Lemoine
+#
+# This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License 2.0
+# which is available at https://www.eclipse.org/legal/epl-2.0/
+#
+# SPDX-License-Identifier: EPL-2.0
+######################################################################
+
 from __future__ import annotations
 from typing import Callable
 import re
@@ -89,13 +99,19 @@ class StatsManager:
     def __init__(self,
                  entity_name: str = None,
                  _json_file: str = JSON_FILE):
+        """
+        Builds a StatsManager.
+        If `entity_name` is given, it loads the default stats from the json file.
+        - If the given entity name is unknown, it builds an empty StatManager.
+        """
         self._dict: dict[str, Stat] = {}
         self._buffs_dict: dict[str, list[StatBuff]] = {}
         
         self.rel_register = StatsRelRegister()
 
         if entity_name:
-            self._init_from_entity(entity_name, _json_file)
+            try: self._init_from_entity(entity_name, _json_file)
+            except ValueError: pass
     
     def _init_from_entity(self, entity_name: str, _file: str) -> None:
         """
